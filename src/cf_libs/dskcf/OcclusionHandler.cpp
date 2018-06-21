@@ -47,10 +47,10 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 		Point position = centerPoint(target);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
-		int left_x = (int) ((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
-		int right_x = this->m_windowSize.width - left_x - 1;
-		int top_y = (int) ((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
-		int down_y = this->m_windowSize.height - top_y - 1;
+		int left_x = (int) ((this->m_windowSize.width - this->m_targetSize.width) / 2 + this->m_depthSegmenter->_segmente_rect.x);
+		int right_x = left_x + this->m_depthSegmenter->_segmente_rect.width;
+		int top_y = (int) ((this->m_windowSize.height -  this->m_targetSize.height) / 2 +this->m_depthSegmenter->_segmente_rect.y);
+		int down_y = top_y + this->m_depthSegmenter->_segmente_rect.height;
 
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
@@ -172,11 +172,14 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				positions.push_back(result.position);
 				responses.push_back(result.maxResponse);
 			}
+		this->_point_by_RGB = positions.front();
+		this->_point_by_depth =positions.back();
 		//here the maximun response is calculated....
 		int64 tStopDetection = cv::getTickCount();
 		this->singleFrameProTime[0] = tStopDetection - tStartDetection;
 
 		int64 tStartSegment = tStopDetection;
+
 		//TO BE CHECKED IN CASE OF MULTIPLE MODELS...LINEAR ETC....WORKS ONLY FOR SINGLE (or concatenate) features
 		target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
 		int bin = this->m_depthSegmenter->update(frame[1], target);
@@ -238,10 +241,10 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		int64 tStartModelUpdate = tStopScaleCheck;
 		window = boundingBoxFromPointSize(position, this->m_windowSize);
 
-		int left_x = (int) ((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
-		int right_x = this->m_windowSize.width - left_x - 1;
-		int top_y = (int) ((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
-		int down_y = this->m_windowSize.height - top_y - 1;
+		int left_x = (int) ((this->m_windowSize.width - this->m_targetSize.width) / 2 + this->m_depthSegmenter->_segmente_rect.x);
+		int right_x = left_x + this->m_depthSegmenter->_segmente_rect.width;
+		int top_y = (int) ((this->m_windowSize.height -  this->m_targetSize.height) / 2 +this->m_depthSegmenter->_segmente_rect.y);
+		int down_y = top_y + this->m_depthSegmenter->_segmente_rect.height;
 
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
@@ -589,7 +592,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < objectBin)
+				if (i < (uint)objectBin)
 					{
 						occluderArea += histogram[i];
 					}
@@ -607,7 +610,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < objectBin)
+				if (i < (uint)objectBin)
 					{
 						occluderArea += histogram[i];
 					}

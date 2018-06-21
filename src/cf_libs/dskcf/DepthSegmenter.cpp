@@ -51,9 +51,9 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 				result = objectMask.clone();
 				result = result * 255;
 
-				cv::Rect ttt = this->rectRegions[indexCenter];
+				this->_segmente_rect = this->rectRegions[indexCenter];
 				//std::cout << "ttt x y width height == " << ttt.x << "  " << ttt.y << "  " << ttt.width << " " << ttt.height << std::endl;
-				cv::rectangle(result, ttt, cv::Scalar(255), 1);
+				cv::rectangle(result, this->_segmente_rect, cv::Scalar(255), 1);
 				cv::namedWindow("result", 0);
 				cv::imshow("result", result);
 
@@ -122,9 +122,9 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 						result = objectMask.clone();
 						result = result * 255;
 
-						cv::Rect ttt = this->rectRegions[indexCloseCenter];
+						this->_segmente_rect  = this->rectRegions[indexCloseCenter];
 						//std::cout << "ttt x y width height == " << ttt.x << "  " << ttt.y << "  " << ttt.width << " " << ttt.height << std::endl;
-						cv::rectangle(result, ttt, cv::Scalar(255), 1);
+						cv::rectangle(result, this->_segmente_rect, cv::Scalar(255), 1);
 						cv::namedWindow("result", 0);
 						cv::imshow("result", result);
 

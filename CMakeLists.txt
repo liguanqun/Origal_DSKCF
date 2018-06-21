@@ -57,7 +57,7 @@ set(CF_TCLAP_DIR "src/3rdparty/tclap")
 set(CF_CV_EXT_DIR "src/3rdparty/cv_ext")
 set(CF_PIOTR_DIR "src/3rdparty/piotr")
 
-set(TBB_LIBRARIES "/usr/lib")
+set(TBB_LIBRARIES "/usr/lib/x86_64-linux-gnu")
 set(TBB_INCLUDE_DIRS "/usr/include/tbb")
 
 set(JSON_CPP_INCLUDE_DIR "/usr/include/jsoncpp")

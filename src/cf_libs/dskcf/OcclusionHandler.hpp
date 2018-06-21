@@ -116,6 +116,7 @@ public:
   const bool isOccluded() const;
 
   std::vector<int64> singleFrameProTime;
+  cv::Point _point_by_RGB,_point_by_depth;
 
 private:
   bool m_isOccluded;
