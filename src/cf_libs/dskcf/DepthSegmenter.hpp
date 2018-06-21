@@ -116,6 +116,9 @@ public:
 
 	//debug function to save histogram
 	void debugSaveHistogram(std::string filename);
+
+	cv::Mat1b _ObjectMask;
+	cv::Mat   _result;
 private:
 	/** The mean of the target object's depth */
 	double m_targetDepth;
@@ -132,7 +135,8 @@ private:
 
 	/** The are of the estimated region in  the image plane*/
 	std::vector<int> areaRegions;
-
+	/** The Rect of the estimated region in  the image plane*/
+	std::vector<cv::Rect> rectRegions;
 	/*internal variable to store segmentation data*/
 	DepthHistogram::Labels labelsResults; 
 

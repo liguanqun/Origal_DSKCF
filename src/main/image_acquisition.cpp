@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "json/json.h"
 ImageAcquisition::ImageAcquisition()
-		: _path("/home/orbbec/Downloads/data/ValidationSet/bear_front")
+		: _path("/home/orbbec/Downloads/data/ValidationSet/child_no1")
 	{
 //遮挡物特别大，遮挡之后的恢复问题
 //cc_occ1  express1_occ express2_occ  new_ex_occ1 new_ex_occ3  rose1.2"

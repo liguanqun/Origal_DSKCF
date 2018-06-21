@@ -134,6 +134,9 @@ private:
   cv::Mat m_cosineWindow;
   cv::Mat m_occluderCosineWindow;
 
+  cv::Mat m_weight;
+
+
   double m_lambdaOcc;
   double m_lambdaR1;
   double m_lambdaR2;
