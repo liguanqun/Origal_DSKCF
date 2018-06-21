@@ -33,6 +33,8 @@ class DskcfTracker: public CfTracker
 
 		virtual TrackerDebug* getTrackerDebug();
 		virtual const std::string getId();
+
+
 	private:
 
 		/** The occlusion handler associated with this object */

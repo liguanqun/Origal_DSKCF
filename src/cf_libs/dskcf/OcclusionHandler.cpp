@@ -47,10 +47,10 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 		Point position = centerPoint(target);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
-		int left_x = (int) ((this->m_windowSize.width - this->m_targetSize.width) / 2 + this->m_depthSegmenter->_segmente_rect.x);
-		int right_x = left_x + this->m_depthSegmenter->_segmente_rect.width;
-		int top_y = (int) ((this->m_windowSize.height -  this->m_targetSize.height) / 2 +this->m_depthSegmenter->_segmente_rect.y);
-		int down_y = top_y + this->m_depthSegmenter->_segmente_rect.height;
+		int left_x = cvFloor((this->m_windowSize.width - this->m_targetSize.width) / 2 );
+		int right_x = left_x +this->m_targetSize.width -1 ;
+		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);
+		int down_y = top_y +this->m_targetSize.height-1;
 
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
@@ -159,6 +159,7 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 
 		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
+			std::cout<<"extractor feature "<< index<<std::endl;
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
 			});
@@ -166,14 +167,21 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		features = this->m_featureProcessor->concatenate(features);
 		std::vector<cv::Mat> frames_ = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
 
+		std::cout<<"features.szie() is  "<<features.size()<<std::endl;
 		for (uint i = 0; i < features.size(); i++)
 			{
 				DetectResult result = this->m_targetTracker[i]->detect(frames_[i], features[i], position, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
+				std::cout<<" position is "<<result.position.x<<"  "<<result.position.y<<std::endl;
 				positions.push_back(result.position);
 				responses.push_back(result.maxResponse);
 			}
 		this->_point_by_RGB = positions.front();
 		this->_point_by_depth =positions.back();
+
+		std::cout<<"RGB point x y = "<<this->_point_by_RGB.x<<"   "<<this->_point_by_RGB.y<<std::endl;
+		std::cout<<"depth point x y = "<<this->_point_by_depth.x<<"   "<<this->_point_by_depth.y<<std::endl;
+		std::cout<<"the distance of point by RGB and depth is "<<(std::sqrt(std::pow(this->_point_by_RGB.x-this->_point_by_depth.x,2)+ std::pow(this->_point_by_RGB.y-this->_point_by_depth.y,2)))<<std::endl;
+
 		//here the maximun response is calculated....
 		int64 tStopDetection = cv::getTickCount();
 		this->singleFrameProTime[0] = tStopDetection - tStartDetection;
@@ -241,10 +249,15 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		int64 tStartModelUpdate = tStopScaleCheck;
 		window = boundingBoxFromPointSize(position, this->m_windowSize);
 
-		int left_x = (int) ((this->m_windowSize.width - this->m_targetSize.width) / 2 + this->m_depthSegmenter->_segmente_rect.x);
-		int right_x = left_x + this->m_depthSegmenter->_segmente_rect.width;
-		int top_y = (int) ((this->m_windowSize.height -  this->m_targetSize.height) / 2 +this->m_depthSegmenter->_segmente_rect.y);
-		int down_y = top_y + this->m_depthSegmenter->_segmente_rect.height;
+/*		if((this->_point_by_depth.x - this->m_targetSize.width/2)<window.x ||( this->_point_by_depth.x+ this->m_targetSize.width/2)>(window.x+window.width)
+				||(this->_point_by_depth.y - this->m_targetSize.height/2)<window.y ||( this->_point_by_depth.y+ this->m_targetSize.height/2)> (window.y+window.height))
+		{
+			std::cout<<"error the RGB and depth has a big diffence"<<std::endl;
+		}*/
+		int left_x = cvFloor((this->m_windowSize.width - this->m_targetSize.width) / 2 );
+		int right_x = left_x +  this->m_targetSize.width-1;
+		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);
+		int down_y = top_y +this->m_targetSize.height -1;
 
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
@@ -255,7 +268,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 			{
 				for (int x = 0; x < weight_pre.cols; x++)
 					{
-						if (x >= left_x && x < right_x && y >= top_y && y < down_y)
+						if (x >= left_x && x <=right_x && y >= top_y && y <= down_y)
 							{
 								weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
 							}
