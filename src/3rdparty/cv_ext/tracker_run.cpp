@@ -181,8 +181,6 @@ bool TrackerRun::update()
 						return false;
 					}
 
-
-				_boundingBox = _cap.Get_Current_GroundTruth_Rect();
 				tStart = getTickCount();
 
 
@@ -280,18 +278,18 @@ bool TrackerRun::update()
 				line(hudImage, tl, br, colour);
 				line(hudImage, cv::Point_<double>(tl.x, br.y), cv::Point_<double>(br.x, tl.y), colour);
 			}
-
+		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
 		imshow(_windowTitle.c_str(), hudImage);
 
-		if (_frameIdx == 0)
+		if (_frameIdx == 1)
 			waitKey(0);
 		else
 			cv::waitKey(33);
 		waitKey(0);
 
-		++_frameIdx;
+
 		/***********************save the result rect and overlap data**************************/
-		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
+
 		ofstream outfile;
 		std::string name = _cap._name + ".txt";
 		outfile.open(name.c_str(), ios::app);
@@ -304,6 +302,7 @@ bool TrackerRun::update()
 		outfile << _frameIdx << "\n";
 		outfile.close();
 
+		++_frameIdx;
 /*		stringstream stream;
 		stream << "train_detect" << _frameIdx<<".jpg";
 
