@@ -93,7 +93,6 @@
 include(FindPackageHandleStandardArgs)
 
 if(NOT TBB_FOUND)
-
   ##################################
   # Check the build type
   ##################################
@@ -220,7 +219,7 @@ if(NOT TBB_FOUND)
           HINTS ${TBB_LIBRARY} ${TBB_SEARCH_DIR}
           PATHS ${TBB_DEFAULT_SEARCH_DIR} ENV LIBRARY_PATH
           PATH_SUFFIXES ${TBB_LIB_PATH_SUFFIX})
-
+ 
       if(TBB_${_comp}_LIBRARY_DEBUG)
         list(APPEND TBB_LIBRARIES_DEBUG "${TBB_${_comp}_LIBRARY_DEBUG}")
       endif()

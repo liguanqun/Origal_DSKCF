@@ -43,8 +43,8 @@ class DskcfTrackerRun : public TrackerRun
 public:
 	DskcfTrackerRun();
 	virtual ~DskcfTrackerRun();
-protected:
-	virtual CfTracker* parseTrackerParas(TCLAP::CmdLine& cmd, int argc, const char** argv);
+//protected:
+//	virtual CfTracker* parseTrackerParas(TCLAP::CmdLine& cmd, int argc, const char** argv);
 };
 
 #endif

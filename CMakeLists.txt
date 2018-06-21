@@ -27,45 +27,58 @@
 # or tort (including negligence or otherwise) arising in any way out of
 # the use of this software, even if advised of the possibility of such damage.
 
-project(CfTracking)
+project(DSKCF)
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 cmake_minimum_required(VERSION 2.8.7)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+#message("${CMAKE_MODULE_PATH}")
 
 # add c++11 support
 if(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS ( -std=c++11 -Wall )
+    ADD_DEFINITIONS ( -std=c++11 -Wall -g -ggdb )
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 # add OpenCV
 set(OPENCV_DIR_HINT "")
 
-if(WIN32)
-    get_filename_component(OPENCV_DIR_PLATFORM $ENV{OPENCV_DIR} DIRECTORY)
-    get_filename_component(OPENCV_DIR_HINT ${OPENCV_DIR_PLATFORM} DIRECTORY)
-endif(WIN32)
+#if(WIN32)
+#    get_filename_component(OPENCV_DIR_PLATFORM $ENV{OPENCV_DIR} DIRECTORY)
+#    get_filename_component(OPENCV_DIR_HINT ${OPENCV_DIR_PLATFORM} DIRECTORY)
+#endif(WIN32)
 
 set(OpenCV_STATIC OFF)
 find_package(OpenCV REQUIRED HINTS ${OPENCV_DIR_HINT})
-find_package(TBB REQUIRED)
+
+#find_package(TBB REQUIRED)
 
 # add 3rdparty source
 set(CF_TCLAP_DIR "src/3rdparty/tclap")
 set(CF_CV_EXT_DIR "src/3rdparty/cv_ext")
 set(CF_PIOTR_DIR "src/3rdparty/piotr")
 
+set(TBB_LIBRARIES "/usr/lib")
+set(TBB_INCLUDE_DIRS "/usr/include/tbb")
+
+set(JSON_CPP_INCLUDE_DIR "/usr/include/jsoncpp")
+set(JSON_CPP_LIBRARIES "/usr/lib/x86_64-linux-gnu")
+
+message("${OpenCV_DIR}")
 include_directories(${OpenCV_DIR}/include)
 include_directories(${TBB_INCLUDE_DIRS})
+include_directories(${JSON_CPP_INCLUDE_DIR})
 include_directories(${CF_TCLAP_DIR}
                     ${CF_CV_EXT_DIR}
                     ${CF_PIOTR_DIR}
                     ${CF_PIOTR_DIR}/src
-                    src/main)
+                    src/main
+                    )
 
 include_directories(src/cf_libs/kcf
                     src/cf_libs/dsst
                     src/cf_libs/common
-                    src/cf_libs/dskcf)
+                    src/cf_libs/dskcf
+                    ${TBB_INCLUDE_DIRS})
 
 set(CF_PIOTR_SOURCES
     ${CF_PIOTR_DIR}/gradientMex.hpp
@@ -92,14 +105,14 @@ set(CF_LIB_COMMON_SOURCES
 
 set(CF_MAIN_SOURCES
     src/main/image_acquisition.hpp
-    src/main/image_acquisition.cpp
+    src/main/image_acquisition.cpp 
     ${CF_CV_EXT_DIR}/init_box_selector.hpp
     ${CF_CV_EXT_DIR}/init_box_selector.cpp
     ${CF_CV_EXT_DIR}/tracker_run.hpp
     ${CF_CV_EXT_DIR}/tracker_run.cpp
     ${CF_TCLAP_DIR}/tclap/CmdLine.h)
 
-add_executable(DSKCFcpp
+add_executable(DSKCF
     src/main/main_dskcf.cpp
     src/cf_libs/kcf/kcf_debug.hpp
     src/cf_libs/kcf/kcf_tracker.hpp
@@ -146,20 +159,11 @@ add_executable(DSKCFcpp
     ${CF_LIB_COMMON_SOURCES})
 	
 
-#set_property(TARGET ${TBB_LIBRARIES} PROPERTY DBG_POSTFIX _debug)
-#message("BUILD TYPE = '${CMAKE_BUILD_TYPE}'")
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} optimized ${TBB_tbb_LIBRARY_RELEASE} debug ${TBB_tbb_LIBRARY_RELEASE})
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} optimized ${TBB_tbb_LIBRARY_RELEASE})
-#target_link_libraries( DSKCFcpp ${OpenCV_LIBS} debug ${TBB_tbb_LIBRARY_RELEASE})
-
-set(TBB_LIBRARIES optimized ${TBB_LIBRARY} ${TBB_tbb_LIBRARY_RELEASE} debug ${TBB_tbb_LIBRARY_DEBUG})
-message("FINALLL TBB_LIBRARIES = '${TBB_LIBRARIES}'")
-target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_LIBRARIES})
-#IF(CMAKE_BUILD_TYPE MATCHES Release)
-#	message("RELEASE")
-#    target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_tbb_LIBRARY_RELEASE})
-#ELSE()
-#	message("DEBUG")
-#    target_link_libraries(DSKCFcpp ${OpenCV_LIBS} ${TBB_tbb_LIBRARY_DEBUG})
-#ENDIF(CMAKE_BUILD_TYPE MATCHES Release)
-
+IF(CMAKE_BUILD_TYPE MATCHES Release)
+	message("RELEASE")
+    target_link_libraries(DSKCF ${OpenCV_LIBS} ${TBB_tbb_LIBRARY_RELEASE})
+ELSE()
+	message("DEBUG")
+    target_link_libraries(DSKCF ${OpenCV_LIBS} ${TBB_LIBRARIES}/libtbb.so ${JSON_CPP_LIBRARIES}/libjsoncpp.so)
+ENDIF(CMAKE_BUILD_TYPE MATCHES Release)
+ 

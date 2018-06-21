@@ -1,105 +1,54 @@
-/*
-// License Agreement (3-clause BSD License)
-// Copyright (c) 2015, Klaus Haag, all rights reserved.
-// Third party copyrights and patents are property of their respective owners.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// * Redistributions of source code must retain the above copyright notice,
-//   this list of conditions and the following disclaimer.
-//
-// * Redistributions in binary form must reproduce the above copyright notice,
-//   this list of conditions and the following disclaimer in the documentation
-//   and/or other materials provided with the distribution.
-//
-// * Neither the names of the copyright holders nor the names of the contributors
-//   may be used to endorse or promote products derived from this software
-//   without specific prior written permission.
-//
-// This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall copyright holders or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
-*/
-
-/*
-// Original file: https://github.com/klahaag/cf_tracking/blob/master/src/
-// + Authors: Jake Hall, Massimo Camplan, Sion Hannuna
-// * We modified the original code of  Klaus Haag by adding a new constructor fo rthe ImgAcqParas
-*/
 
 #ifndef IMAGE_ACQUISITION_HPP_
 #define IMAGE_ACQUISITION_HPP_
 
 #include "opencv2/highgui/highgui.hpp"
-
-class ImgAcqParas
-{
-public:
-    bool isMock;
-    int device;
-    std::string sequencePath;
-    std::string expansionStr;
-
-	ImgAcqParas()
-	{
-		this->isMock = false;
-		this->device = -1;
-		this->sequencePath = "";
-		this->expansionStr = "";
-	}
-};
-
-class VideoCaptureMock
-{
-public:
-    VideoCaptureMock();
-
-    virtual ~VideoCaptureMock();
-
-    void open();
-
-    VideoCaptureMock& operator >> (CV_OUT cv::Mat& image);
-
-    bool isOpened();
-
-    void release();
-
-private:
-    bool isOpen;
-    cv::Mat _staticImage;
-};
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+#include <dirent.h>
+#include<unistd.h>
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<dirent.h>
+#include<map>
 
 class ImageAcquisition
-{
-public:
-    ImageAcquisition();
+	{
+	public:
+		ImageAcquisition();
+		virtual ~ImageAcquisition();
+		void Init();
 
-    virtual ~ImageAcquisition();
 
-    void open(ImgAcqParas paras);
+		cv::Mat Get_first_RGB();
+		cv::Mat Get_Next_RGB();
 
-    void set(int key, int value);
+		cv::Mat Get_Depth_Image_same_time_to_RGB();
 
-    double get(int key);
+        cv::Rect Get_Init_Rect(void);
 
-    bool isOpened();
+        cv::Rect Get_Current_GroundTruth_Rect(void);
 
-    void release();
+		bool Get_Depth_Image(int k,cv::Mat& image);
+		bool Get_RGB_Image(int k, cv::Mat& image);
 
-    ImageAcquisition& operator >> (CV_OUT cv::Mat& image);
+		void Get_Time_And_K(std::string str, int & t, int & k);
+		cv::Mat Shift_Bit_Depth_Image(cv::Mat& image);
 
-private:
-    cv::VideoCapture _cvCap;
-    ImgAcqParas _paras;
-    VideoCaptureMock _mockCap;
-};
+        std::string _name;
+
+	private:
+        const std::string _path;
+		std::map<int, std::string> _FrameID_path, _FrameID_path_depth;
+		std::map<int, cv::Rect> _FrameID_rect;
+		std::map<int, int> _FrameID_t, _FrameID_t_depth;
+		std::map<int, int> _RGB_DEPTH_ID;
+		int _size, _rgb_FrameID, _depth_FrameID;
+
+	};
 
 #endif
