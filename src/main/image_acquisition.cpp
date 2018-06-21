@@ -157,12 +157,15 @@ void ImageAcquisition::Init()
 
 		if (reader.parse(in, root))
 			{
+				_size = std::min(_size,root["imageFrameID"].size());
 
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
 						int ach = root["depthFrameID"][i].asInt();
 						_RGB_DEPTH_ID[i + 1] = ach;
+
 					}
+
 			}
 		else
 			{
