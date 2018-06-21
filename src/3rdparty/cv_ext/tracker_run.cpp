@@ -31,7 +31,7 @@ TrackerRun::TrackerRun(string windowTitle)
 		_debug = 0;
 		_tracker = 0;
 		//	_paras = Parameters();
-		_frameIdx = 0;
+		_frameIdx = 1;
 
 		_overlap_sum = 0;
 	}
@@ -127,7 +127,7 @@ bool TrackerRun::init()
 		_boundingBox = _cap.Get_Init_Rect();
 		_hasInitBox = true;
 
-		_frameIdx = 0;
+		_frameIdx = 1;
 		return true;
 	}
 
@@ -151,7 +151,7 @@ bool TrackerRun::update()
 		int64 tStart = 0;
 		int64 tDuration = 0;
 
-		if (_frameIdx == 0)
+		if (_frameIdx == 1)
 			{
 
 				_image[0]=_cap.Get_first_RGB();
@@ -173,7 +173,7 @@ bool TrackerRun::update()
 
 			}
 
-		if (_frameIdx == 0)
+		if (_frameIdx == 1)
 			{
 				if (!_hasInitBox)
 					{
@@ -181,7 +181,10 @@ bool TrackerRun::update()
 						return false;
 					}
 
+
+				_boundingBox = _cap.Get_Current_GroundTruth_Rect();
 				tStart = getTickCount();
+
 
 				//把原图像缩小四倍  减少数据量
 				std::array<cv::Mat, 2> resized;
@@ -195,7 +198,7 @@ bool TrackerRun::update()
 
 
 			}
-		else if (_frameIdx >= 1)
+		else if (_frameIdx > 1)
 			{
 				tStart = getTickCount();
 
