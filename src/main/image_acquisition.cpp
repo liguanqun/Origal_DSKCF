@@ -157,7 +157,7 @@ void ImageAcquisition::Init()
 
 		if (reader.parse(in, root))
 			{
-				_size = std::min(_size,root["imageFrameID"].size());
+				_size = std::min(_size,(int)root["imageFrameID"].size());
 
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
