@@ -53,7 +53,7 @@ private:
     bool run();
     bool update();
 
-    float Overlap(const cv::Rect_<double>& box1,const cv::Rect_<double>& box2);
+    float Overlap(const cv::Rect_<double>& boundBox, const cv::Rect_<double>& groundtruth,bool targetOnFrame);
 //protected:
 //    virtual CfTracker* parseTrackerParas(TCLAP::CmdLine& cmd, int argc, const char** argv) = 0;
 private:
