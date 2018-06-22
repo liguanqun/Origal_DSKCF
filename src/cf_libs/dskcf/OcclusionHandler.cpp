@@ -47,10 +47,10 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 		Point position = centerPoint(target);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
-		int left_x = cvFloor((this->m_windowSize.width - this->m_targetSize.width) / 2 );
-		int right_x = left_x +this->m_targetSize.width -1 ;
-		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);
-		int down_y = top_y +this->m_targetSize.height-1;
+		int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
+		int right_x = this->m_windowSize.width - left_x - 1;
+		int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
+		int down_y = this->m_windowSize.height - top_y - 1;
 
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
@@ -74,7 +74,6 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 			}
 		cv::namedWindow("weight_for_show", 0);
 		cv::imshow("weight_for_show", weight_for_show);
-		//	std::cout << "weight mat is " << weight_pre << std::endl;
 		//
 		int cell_width = this->m_cosineWindow.cols;
 		int cell_height = this->m_cosineWindow.rows;
@@ -98,12 +97,12 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 					}
 			}
-		cv::namedWindow("weight_for_show_b", 0);
-		cv::imshow("weight_for_show_b", weight_for_show_b);
-		std::cout << "weight cols*rows" << weight.cols << " * " << weight.rows << std::endl;
-		//	std::cout<<"finnaly weight == "<<std::endl<<weight<<std::endl;
-		this->m_weight = weight;
+		//cv::namedWindow("weight_for_show_b", 0);
+	//	cv::imshow("weight_for_show_b", weight_for_show_b);
 
+		this->m_weight.setTo(0);
+		this->m_weight = weight;
+	//	std::cout << "the mat of weight is " << std::endl << weight_pre << std::endl;
 		//Extract features
 		for (int i = 0; i < 2; i++)
 			{
@@ -165,7 +164,6 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 
 		features = this->m_featureProcessor->concatenate(features);
 		std::vector<cv::Mat> frames_ = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
-
 
 		for (uint i = 0; i < features.size(); i++)
 			{
@@ -241,32 +239,31 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		this->singleFrameProTime[5] = tStopScaleCheck - tStartScaleCheck;
 
 		int64 tStartModelUpdate = tStopScaleCheck;
+
+		//根据最新预测的位置扩展 window 的位置
 		window = boundingBoxFromPointSize(position, this->m_windowSize);
+		int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
+		int right_x = this->m_windowSize.width - left_x - 1;
+		int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
+		int down_y = this->m_windowSize.height - top_y - 1;
 
-		int left_x = cvFloor((this->m_windowSize.width - this->m_targetSize.width) / 2 );
-		int right_x = left_x +  this->m_targetSize.width-1;
-		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);
-		int down_y = top_y +this->m_targetSize.height -1;
-
-
-		std::cout<<" this->m_depthSegmenter->_ObjectMask cols * rows "<<this->m_depthSegmenter->_ObjectMask.cols <<"  "<<this->m_depthSegmenter->_ObjectMask.rows <<std::endl;
-		std::cout<<" this->m_targetSize. width height "<<this->m_targetSize.width<<"  "<<this->m_targetSize.height<<std::endl;
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
-		//	std::cout << "weight mat is " << weight_pre << std::endl;
 		cv::Mat weight_for_show = frame[0].clone();
 		cv::Mat weight_for_show_b = frame[0].clone();
-		//	std::cout << "this->m_depthSegmenter->_ObjectMask == " << std::endl << this->m_depthSegmenter->_ObjectMask << std::endl;
+		int cell_width = this->m_cosineWindow.cols;
+		int cell_height = this->m_cosineWindow.rows;
+		cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
+
 		for (int y = 0; y < weight_pre.rows; y++)
 			{
 				for (int x = 0; x < weight_pre.cols; x++)
 					{
-						if (x >= left_x && x <=right_x && y >= top_y && y <= down_y)
+						if (x >= left_x && x < right_x && y >= top_y && y <down_y)
 							{
 								weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
 							}
 						if (weight_pre.at<double>(y, x) > 0)
 							{
-								// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
 								weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
 							}
 
@@ -275,11 +272,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 
 		cv::namedWindow("weight_for_show", 0);
 		cv::imshow("weight_for_show", weight_for_show);
-		//	std::cout << "weight mat is " << weight_pre << std::endl;
-		//
-		int cell_width = this->m_cosineWindow.cols;
-		int cell_height = this->m_cosineWindow.rows;
-		cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
+
 		for (int cell_y = 0; cell_y < cell_height; cell_y++)
 			{
 				for (int cell_x = 0; cell_x < cell_width; cell_x++)
@@ -298,12 +291,12 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 							}
 					}
 			}
-		cv::namedWindow("weight_for_show_b", 0);
-		cv::imshow("weight_for_show_b", weight_for_show_b);
-		std::cout << "weight cols*rows" << weight.cols << " * " << weight.rows << std::endl;
-		std::cout << "this->m_cosineWindow  " << this->m_cosineWindow.cols << " * " << this->m_cosineWindow.rows << std::endl;
-		//		std::cout<<"finnaly weight == "<<std::endl<<weight<<std::endl;
+		//cv::namedWindow("weight_for_show_b", 0);
+		//cv::imshow("weight_for_show_b", weight_for_show_b);
+
+		this->m_weight.setTo(0);
 		this->m_weight = weight;
+		//std::cout << "the mat of weight is " << std::endl << weight_pre << std::endl;
 
 		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
@@ -597,7 +590,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < (uint)objectBin)
+				if (i < (uint) objectBin)
 					{
 						occluderArea += histogram[i];
 					}
@@ -615,7 +608,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < (uint)objectBin)
+				if (i < (uint) objectBin)
 					{
 						occluderArea += histogram[i];
 					}
