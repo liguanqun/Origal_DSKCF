@@ -246,7 +246,6 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		int right_x = this->m_windowSize.width - left_x - 1;
 		int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
 		int down_y = this->m_windowSize.height - top_y - 1;
-
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		cv::Mat weight_for_show = frame[0].clone();
 		cv::Mat weight_for_show_b = frame[0].clone();
@@ -262,10 +261,12 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 							{
 								weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
 							}
+
 						if (weight_pre.at<double>(y, x) > 0)
 							{
 								weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
 							}
+
 
 					}
 			}
@@ -296,7 +297,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 
 		this->m_weight.setTo(0);
 		this->m_weight = weight;
-		//std::cout << "the mat of weight is " << std::endl << weight_pre << std::endl;
+
 
 		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{

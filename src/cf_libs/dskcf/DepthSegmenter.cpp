@@ -117,7 +117,7 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 						cv::Mat1b objectMask = createMask<uchar>(this->m_labeledImage, this->labelsResults.labelsC[indexCloseCenter], false);
 						objectMask.mul(mask);
 
-
+						this->_ObjectMask = objectMask;
 						cv::Mat result;
 						result = objectMask.clone();
 						result = result * 255;
