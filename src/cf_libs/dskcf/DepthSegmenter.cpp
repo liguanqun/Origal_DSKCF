@@ -355,7 +355,7 @@ const std::vector<cv::Point_<double> > DepthSegmenter::createLabelImageCCOcclude
 		tmpMask.copyTo(objectMask);
 		tmpMask.release();
 
-		for (int j = 0; j < tmpVector.size(); j++)
+		for (int j = 0; j <(int) tmpVector.size(); j++)
 			{
 				if (tmpVector[j].x != -1)
 					{
@@ -449,7 +449,7 @@ const std::vector<cv::Point_<double> > DepthSegmenter::createLabelImageCCOcclude
 		tmpMask.copyTo(objectMask);
 		tmpMask.release();
 
-		for (int j = 0; j < tmpVector.size(); j++)
+		for (int j = 0; j < (int)tmpVector.size(); j++)
 			{
 				if (tmpVector[j].x != -1)
 					{
@@ -569,7 +569,7 @@ const int DepthSegmenter::handleOcclusion(const std::vector<float> & centroids, 
 		double minDistance;
 		std::vector<float> peakDistances = centroids;
 
-		double max = this->m_histogram.size();
+		//double max = (double) this->m_histogram.size();
 
 		for (auto itr = peakDistances.begin(); itr != peakDistances.end(); itr++)
 			{
@@ -632,7 +632,7 @@ const int DepthSegmenter::handleOcclusion(const cv::Mat& front_depth, const std:
 		int minNonZero = 0;
 		bool foundMin = false;
 
-		double max = this->m_histogram.size();
+		//double max = (double)this->m_histogram.size();
 
 		for (auto itr = peakDistances.begin(); itr != peakDistances.end(); itr++)
 			{
@@ -709,7 +709,7 @@ void DepthSegmenter::debugSaveHistogram(std::string filename)
 	{
 		FILE *pfile = fopen(filename.c_str(), "w");
 
-		for (int i = 0; i < this->m_histogram.size(); i++)
+		for (int i = 0; i < (int)this->m_histogram.size(); i++)
 			fprintf(pfile, "%f %f\n", this->m_histogram.binToDepth(i), this->m_histogram[i]);
 
 		fclose(pfile);

@@ -20,7 +20,7 @@ const std::vector< int > DepthHistogram::getPeaks() const
   {
     cv::minMaxLoc( this->m_bins, nullptr, &max );
 
-    for( int i = 0; i < this->size(); i++ )
+    for( int i = 0; i < (int)this->size(); i++ )
     {
       if( this->m_bins( i ) > max * 0.005 )//ddddd
       {
@@ -161,7 +161,7 @@ const DepthHistogram::Labels DepthHistogram::kmeans( const std::vector< float > 
 
       for( int j = 0; j < this->m_bins.rows; j++ )
       {
-        if( static_cast< uint >( result.labels[ j ] == i ) )
+        if( static_cast< uint >( result.labels[ j ] == (int)i ) )
         {
           
           numerator += j * this->m_bins( j );
@@ -191,7 +191,7 @@ const DepthHistogram::Labels DepthHistogram::kmeans( const std::vector< float > 
   }
 
     //fill the label Center Vector
-  for(int i=0; i < result.labelsC.size();i++)
+  for(int i=0; i < (int)result.labelsC.size();i++)
 	result.labelsC[i]=i+1;
 
   return result;
