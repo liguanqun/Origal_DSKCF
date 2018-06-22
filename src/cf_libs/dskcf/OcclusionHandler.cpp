@@ -249,11 +249,6 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		int64 tStartModelUpdate = tStopScaleCheck;
 		window = boundingBoxFromPointSize(position, this->m_windowSize);
 
-/*		if((this->_point_by_depth.x - this->m_targetSize.width/2)<window.x ||( this->_point_by_depth.x+ this->m_targetSize.width/2)>(window.x+window.width)
-				||(this->_point_by_depth.y - this->m_targetSize.height/2)<window.y ||( this->_point_by_depth.y+ this->m_targetSize.height/2)> (window.y+window.height))
-		{
-			std::cout<<"error the RGB and depth has a big diffence"<<std::endl;
-		}*/
 		int left_x = cvFloor((this->m_windowSize.width - this->m_targetSize.width) / 2 );
 		int right_x = left_x +  this->m_targetSize.width-1;
 		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);

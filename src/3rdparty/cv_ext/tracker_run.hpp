@@ -52,8 +52,7 @@ private:
     bool init();
     bool run();
     bool update();
-    void printResults(const cv::Rect_<double>& boundingBox, bool isConfident, bool isTracked);
-	void printResultsTiming(const std::vector<int64> &singleFrameTiming);
+
     float Overlap(const cv::Rect_<double>& box1,const cv::Rect_<double>& box2);
 //protected:
 //    virtual CfTracker* parseTrackerParas(TCLAP::CmdLine& cmd, int argc, const char** argv) = 0;
@@ -65,7 +64,7 @@ private:
   //  Parameters _paras;
     cv::Rect_<double> _boundingBox;
      ImageAcquisition  _cap;
-    std::ofstream _resultsFile,_resultsFileTime;
+
     TCLAP::CmdLine _cmd;
     TrackerDebug* _debug;
     int _frameIdx;
