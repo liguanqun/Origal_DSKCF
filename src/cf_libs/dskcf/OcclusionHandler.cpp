@@ -159,7 +159,6 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 
 		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
-			std::cout<<"extractor feature "<< index<<std::endl;
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
 			});
@@ -167,20 +166,13 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		features = this->m_featureProcessor->concatenate(features);
 		std::vector<cv::Mat> frames_ = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
 
-		std::cout<<"features.szie() is  "<<features.size()<<std::endl;
+
 		for (uint i = 0; i < features.size(); i++)
 			{
 				DetectResult result = this->m_targetTracker[i]->detect(frames_[i], features[i], position, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
-				std::cout<<" position is "<<result.position.x<<"  "<<result.position.y<<std::endl;
 				positions.push_back(result.position);
 				responses.push_back(result.maxResponse);
 			}
-		this->_point_by_RGB = positions.front();
-		this->_point_by_depth =positions.back();
-
-		std::cout<<"RGB point x y = "<<this->_point_by_RGB.x<<"   "<<this->_point_by_RGB.y<<std::endl;
-		std::cout<<"depth point x y = "<<this->_point_by_depth.x<<"   "<<this->_point_by_depth.y<<std::endl;
-		std::cout<<"the distance of point by RGB and depth is "<<(std::sqrt(std::pow(this->_point_by_RGB.x-this->_point_by_depth.x,2)+ std::pow(this->_point_by_RGB.y-this->_point_by_depth.y,2)))<<std::endl;
 
 		//here the maximun response is calculated....
 		int64 tStopDetection = cv::getTickCount();
@@ -229,6 +221,7 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				estimate.y = (estimate.y - this->m_targetSize.height / 2) < frame[0].rows ? estimate.y : this->m_targetSize.height;
 				estimate.x = (estimate.x + this->m_targetSize.width / 2) > 0 ? estimate.x : 1;
 				estimate.y = (estimate.y + this->m_targetSize.height / 2) > 0 ? estimate.y : 1;
+				//获取了 尺度系数
 				return boundingBoxFromPointSize(estimate, this->m_initialSize * this->m_scaleAnalyser->getScaleFactor());
 
 			}
@@ -241,6 +234,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		std::vector<std::shared_ptr<FC> > features(2);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
 
+		//根据深度分割得到的目标深度， 更新了目标的大小，即更新了尺度
 		this->m_scaleAnalyser->update(frame[1], window);
 
 		int64 tStopScaleCheck = cv::getTickCount();
@@ -254,6 +248,9 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		int top_y = cvFloor((this->m_windowSize.height -  this->m_targetSize.height) / 2);
 		int down_y = top_y +this->m_targetSize.height -1;
 
+
+		std::cout<<" this->m_depthSegmenter->_ObjectMask cols * rows "<<this->m_depthSegmenter->_ObjectMask.cols <<"  "<<this->m_depthSegmenter->_ObjectMask.rows <<std::endl;
+		std::cout<<" this->m_targetSize. width height "<<this->m_targetSize.width<<"  "<<this->m_targetSize.height<<std::endl;
 		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
 		//	std::cout << "weight mat is " << weight_pre << std::endl;
 		cv::Mat weight_for_show = frame[0].clone();
