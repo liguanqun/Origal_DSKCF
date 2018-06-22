@@ -10,7 +10,7 @@
 #include "json/json.h"
 ImageAcquisition::ImageAcquisition()
 		: _path("/home/orbbec/Downloads/data/ValidationSet/child_no1")
-	{///home/liguanqun/Downloads/data/ValidationSet/bear_front
+	{ ///home/liguanqun/Downloads/data/ValidationSet/bear_front
 //遮挡物特别大，遮挡之后的恢复问题
 //cc_occ1  express1_occ express2_occ  new_ex_occ1 new_ex_occ3  rose1.2"
 		_rgb_FrameID = 1;
@@ -38,11 +38,12 @@ ImageAcquisition::ImageAcquisition()
 	}
 void ImageAcquisition::Init()
 	{
+		using namespace std;
 		/*******************读RGB图*************************/
 		int t, k;
 		DIR *dp;
 		struct dirent *dirp;
-		std::string rgb_path= _path+"/rgb/";
+		std::string rgb_path = _path + "/rgb/";
 		if ((dp = opendir(rgb_path.c_str())) == NULL)
 			{
 				perror("opendir error");
@@ -73,7 +74,7 @@ void ImageAcquisition::Init()
 
 		DIR *dp_d;
 		struct dirent *dirp_d;
-		std::string depth_path= _path+"/depth/";
+		std::string depth_path = _path + "/depth/";
 		if ((dp_d = opendir(depth_path.c_str())) == NULL)
 			{
 				perror("opendir error");
@@ -102,44 +103,6 @@ void ImageAcquisition::Init()
 		_size = std::min(_FrameID_path_depth.size(), _FrameID_path.size());
 		std::cout << "total image is " << _size << std::endl;
 
-		/******************读groundtruth***************************/
-		using namespace std;
-
-		std::string name, path;
-		name = _path.substr(_path.find_last_of('/') + 1, _path.size());
-		std::cout << "current image set is  " << name << std::endl;
-		_name = name;
-		path = _path + "/" + name + ".txt";
-
-		ifstream myfile(path.c_str());
-		if (!myfile.is_open())
-			{
-				cout << "can not open the init file" << endl;
-			}
-
-		string temp;
-
-		while (getline(myfile, temp))
-			{
-				cv::Rect r;
-				r.x = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-				temp.erase(0, temp.find_first_of(',') + 1);
-
-				r.y = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-				temp.erase(0, temp.find_first_of(',') + 1);
-
-				r.width = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-				temp.erase(0, temp.find_first_of(',') + 1);
-
-				r.height = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-				temp.erase(0, temp.find_first_of(',') + 1);
-
-				int k = atoi(temp.c_str());
-				_FrameID_rect[k] = r;
-				//	std::cout<<"rect .x y width height  k  == "<<r.x<<"  "<<r.y<<"  "<<r.width<<"  "<<r.height<<"  "<<k<<std::endl;
-
-			}
-		myfile.close();   //关闭文件
 		/**********读frames.json******************/
 		std::string path_JSON = _path + "/frames.json";
 
@@ -157,7 +120,7 @@ void ImageAcquisition::Init()
 
 		if (reader.parse(in, root))
 			{
-				_size = std::min(_size,(int)root["imageFrameID"].size());
+				_size = std::min(_size, (int) root["imageFrameID"].size());
 
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
@@ -171,7 +134,61 @@ void ImageAcquisition::Init()
 			{
 				cout << "JSON file parse error\n" << endl;
 			}
+		/******************读groundtruth***************************/
 
+		std::string name, path;
+		name = _path.substr(_path.find_last_of('/') + 1, _path.size());
+		std::cout << "current image set is  " << name << std::endl;
+		_name = name;
+		path = _path + "/" + name + ".txt";
+
+		ifstream myfile(path.c_str());
+		if (!myfile.is_open())
+			{
+				cout << "can not open the init file" << endl;
+			}
+
+		string temp;
+		int Rcet_ID = 1;
+		while (getline(myfile, temp))
+			{
+
+				cv::Rect r;
+				if (Rcet_ID > _size)
+					{
+						std::cout << "Read the groundtruth error,the size of groundtruth beyond the size of the set" << std::endl;
+					}
+				else if (temp.substr(0, temp.find_first_of(',')).c_str() == "NaN")
+					{
+						r.x = 0;
+						r.y = 0;
+						r.height = 0;
+						r.width = 0;
+						_FrameID_rect[Rcet_ID] = r;
+					}
+				else
+					{
+						r.x = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
+						temp.erase(0, temp.find_first_of(',') + 1);
+
+						r.y = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
+						temp.erase(0, temp.find_first_of(',') + 1);
+
+						r.width = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
+						temp.erase(0, temp.find_first_of(',') + 1);
+
+						r.height = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
+						temp.erase(0, temp.find_first_of(',') + 1);
+
+						int k = atoi(temp.c_str());
+						_FrameID_rect[k] = r;
+					}
+
+				Rcet_ID++;
+
+			}
+
+		myfile.close();   //关闭文件
 	}
 cv::Mat ImageAcquisition::Get_first_RGB()
 	{
@@ -303,7 +320,6 @@ cv::Mat ImageAcquisition::Shift_Bit_Depth_Image(cv::Mat& image)
 
 		image_2 = image.clone();
 
-
 		for (int i = 0; i < image.rows; i++)
 			{
 				for (int j = 0; j < image.cols; j++)
@@ -333,7 +349,6 @@ cv::Rect ImageAcquisition::Get_Init_Rect(void)
 				cout << "can not open the init file" << endl;
 			}
 
-
 		string temp;
 		getline(myfile, temp);
 		myfile.close();   //关闭文件
@@ -349,10 +364,8 @@ cv::Rect ImageAcquisition::Get_Init_Rect(void)
 
 		r.height = atoi(temp.c_str());
 
-
 		return r;
 	}
-
 
 ImageAcquisition::~ImageAcquisition()
 	{
