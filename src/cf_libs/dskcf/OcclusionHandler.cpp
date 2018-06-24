@@ -181,7 +181,91 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		//TO BE CHECKED IN CASE OF MULTIPLE MODELS...LINEAR ETC....WORKS ONLY FOR SINGLE (or concatenate) features
 		target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
 		int bin = this->m_depthSegmenter->update(frame[1], target);
+////////////////////////////////////////////////////////////////////////////////////////
+		//根据最新预测的位置扩展 window 的位置
+				window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
+				int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
+				int right_x = this->m_windowSize.width - left_x - 1;
+				int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
+				int down_y = this->m_windowSize.height - top_y - 1;
+				cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
+				cv::Mat weight_for_show = frame[0].clone();
+				cv::Mat weight_for_show_b = frame[0].clone();
+				int cell_width = this->m_cosineWindow.cols;
+				int cell_height = this->m_cosineWindow.rows;
+				cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
 
+				for (int y = 0; y < weight_pre.rows; y++)
+					{
+						for (int x = 0; x < weight_pre.cols; x++)
+							{
+								if (x >= left_x && x < right_x && y >= top_y && y <down_y)
+									{
+										weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
+									}
+
+								if (weight_pre.at<double>(y, x) > 0)
+									{
+										weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
+									}
+
+
+							}
+					}
+
+				cv::namedWindow("weight_for_show", 0);
+				cv::imshow("weight_for_show", weight_for_show);
+
+				for (int cell_y = 0; cell_y < cell_height; cell_y++)
+					{
+						for (int cell_x = 0; cell_x < cell_width; cell_x++)
+							{
+								for (int i = 0; i < 4; i++)
+									{
+										for (int j = 0; j < 4; j++)
+											{
+												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) / 16;
+											}
+									}
+								if (weight.at<double>(cell_y, cell_x) > 1)
+									{
+										// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
+										weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
+									}
+							}
+					}
+				//cv::namedWindow("weight_for_show_b", 0);
+				//cv::imshow("weight_for_show_b", weight_for_show_b);
+
+				this->m_weight.setTo(0);
+				this->m_weight = weight;
+
+
+				//重新检测一次
+		        target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
+			    window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
+			    positions.clear();
+				//tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+				//	{
+						//features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
+						//FC::mulFeatures( features[ index ], this->m_cosineWindow );
+						FC::mulFeatures( features[ 0 ], this->m_weight );
+					//});
+
+				//features = this->m_featureProcessor->concatenate(features);
+						features =  features[ 0 ];
+				//std::vector<cv::Mat> frames_ = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
+
+			//	for (uint i = 0; i < features.size(); i++)
+				//	{
+						DetectResult result = this->m_targetTracker[0]->detect(frames_[0], features[0], position, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
+						positions.push_back(result.position);
+						//responses.push_back(result.maxResponse);
+				//	}
+				target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
+				 bin = this->m_depthSegmenter->update(frame[1], target);
+
+////////////////////////////////////////////////////////////////////////////////////////
 		DepthHistogram histogram = this->m_depthSegmenter->getHistogram();
 
 		double totalArea = target.area() * 1.05;

@@ -222,7 +222,7 @@ bool TrackerRun::update()
 	std::cout << "the current overlap is " << overlap<< "   and the sum of it is  " << _overlap_sum << std::endl;
 
 	stringstream ss;
-	ss << "FPS: " << fps;
+	ss << "FPS: " << fps<<"  sum_overlap is "<<_overlap_sum;
 	putText(hudImage, ss.str(), cv::Point(20, 20), FONT_HERSHEY_TRIPLEX, 0.5,
 			Scalar(255, 0, 0));
 
