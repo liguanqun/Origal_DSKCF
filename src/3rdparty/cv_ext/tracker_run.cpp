@@ -38,15 +38,6 @@ TrackerRun::TrackerRun(string windowTitle)
 
 TrackerRun::~TrackerRun()
 	{
-		if (_resultsFile.is_open())
-			{
-				_resultsFile.close();
-			}
-
-		if (_resultsFileTime.is_open())
-			{
-				_resultsFileTime.close();
-			}
 
 		if (_tracker)
 			{
@@ -96,33 +87,6 @@ bool TrackerRun::init()
 
 		namedWindow(_windowTitle.c_str());
 
-//输出结果和时间
-		std::string outputFilePath = "/home/orbbec/resultsFile.txt";
-		_resultsFile.open(outputFilePath.c_str()); //输出结果的路径
-
-		if (!_resultsFile.is_open())
-			{
-				std::cerr << "Error: Unable to create results file: " << outputFilePath.c_str() << std::endl;
-
-				return false;
-			}
-
-		_resultsFile.precision(std::numeric_limits<double>::digits10 - 4);
-
-		size_t posLast = outputFilePath.find_last_of('/');
-
-		string nameTimeFile = outputFilePath.substr(0, posLast);
-		nameTimeFile += "/modulesTimeFrames.txt";
-		_resultsFileTime.open(nameTimeFile.c_str());
-
-		if (!_resultsFileTime.is_open())
-			{
-				std::cerr << "Error: Unable to create results file: " << nameTimeFile.c_str() << std::endl;
-
-				return false;
-			}
-
-		_resultsFileTime.precision(std::numeric_limits<double>::digits10 - 16);
 
 		_boundingBox = _cap.Get_Init_Rect();
 		_hasInitBox = true;
@@ -261,7 +225,7 @@ bool TrackerRun::update()
 		std::cout << "the current overlap is " << overlap << "   and the sum of it is  " << _overlap_sum << std::endl;
 
 		stringstream ss;
-		ss << "FPS: " << fps;
+		ss << "FPS: " << fps<<"   sum_overlap is "<<_overlap_sum;
 		putText(hudImage, ss.str(), cv::Point(20, 20), FONT_HERSHEY_TRIPLEX, 0.5, Scalar(255, 0, 0));
 
 		ss.str("");
@@ -310,43 +274,7 @@ bool TrackerRun::update()
 		return true;
 	}
 
-void TrackerRun::printResults(const cv::Rect_<double>& boundingBox, bool isConfident, bool isTracked)
-	{
-		if (_resultsFile.is_open())
-			{
-				if (boundingBox.width > 0 && boundingBox.height > 0 && isConfident && isTracked)
-					{
-						_resultsFile << boundingBox.x << "," << boundingBox.y << "," << boundingBox.width + boundingBox.x << "," << boundingBox.height + boundingBox.y << "," << 0 << std::endl;
-					}
-				else
-					{
-						_resultsFile << "NaN, NaN, NaN, NaN, " << 1 << std::endl;
-					}
 
-				if (_debug != 0)
-					{
-						_debug->printToFile();
-					}
-			}
-	}
-
-void TrackerRun::printResultsTiming(const std::vector<int64> &singleFrameTiming)
-	{
-		if (_resultsFileTime.is_open())
-			{
-				double fticks = static_cast<double>(getTickFrequency());
-
-				for (int i = 0; i < (int) singleFrameTiming.size(); i++)
-					{
-						double elapsedTime = 0;
-
-						if (singleFrameTiming[i] != 0)
-							elapsedTime = static_cast<double>(singleFrameTiming[i]) / fticks;
-						_resultsFileTime << elapsedTime << " ";
-					}
-				_resultsFileTime << endl;
-			}
-	}
 
 void TrackerRun::setTrackerDebug(TrackerDebug* debug)
 	{
