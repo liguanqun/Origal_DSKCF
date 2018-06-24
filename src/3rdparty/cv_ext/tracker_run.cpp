@@ -220,7 +220,7 @@ bool TrackerRun::update()
 		circle(hudImage, center_truth, 3, Scalar(255, 0, 0), 2);
 
 		//计算重合率
-		float overlap = Overlap(_boundingBox, Current_GroundTruth);
+		float overlap = Overlap(_boundingBox, Current_GroundTruth,_targetOnFrame);
 		_overlap_sum += overlap;
 		std::cout << "the current overlap is " << overlap << "   and the sum of it is  " << _overlap_sum << std::endl;
 
@@ -280,28 +280,40 @@ void TrackerRun::setTrackerDebug(TrackerDebug* debug)
 	{
 		_debug = debug;
 	}
-float TrackerRun::Overlap(const cv::Rect_<double>& box1, const cv::Rect_<double>& box2)
+float TrackerRun::Overlap(const cv::Rect_<double>& boundBox,
+		const cv::Rect_<double>& groundtruth, bool targetOnFrame)
+{
+	if ((!targetOnFrame) && groundtruth.area() == 0)
 	{
-		if (box1.x > box2.x + box2.width)
-			{
-				return 0.0;
-			}
-		if (box1.y > box2.y + box2.height)
-			{
-				return 0.0;
-			}
-		if (box1.x + box1.width < box2.x)
-			{
-				return 0.0;
-			}
-		if (box1.y + box1.height < box2.y)
-			{
-				return 0.0;
-			}
-		float colInt = min(box1.x + box1.width, box2.x + box2.width) - max(box1.x, box2.x);
-		float rowInt = min(box1.y + box1.height, box2.y + box2.height) - max(box1.y, box2.y);
+		return 1.0;
+	}
+	else if ((!targetOnFrame && groundtruth.area() != 0)|| (targetOnFrame && groundtruth.area() == 0))
+	{
+		return -1;
+	}
+	else
+	{
+		if (boundBox.x > groundtruth.x + groundtruth.width)
+		{
+			return 0.0;
+		}
+		if (boundBox.y > groundtruth.y + groundtruth.height)
+		{
+			return 0.0;
+		}
+		if (boundBox.x + boundBox.width < groundtruth.x)
+		{
+			return 0.0;
+		}
+		if (boundBox.y + boundBox.height < groundtruth.y)
+		{
+			return 0.0;
+		}
+		float colInt = min(boundBox.x + boundBox.width,groundtruth.x + groundtruth.width)- max(boundBox.x, groundtruth.x);
+		float rowInt = min(boundBox.y + boundBox.height,groundtruth.y + groundtruth.height)- max(boundBox.y, groundtruth.y);
 		float intersection = colInt * rowInt;
-		float area1 = box1.width * box1.height;
-		float area2 = box2.width * box2.height;
+		float area1 = boundBox.width * boundBox.height;
+		float area2 = groundtruth.width * groundtruth.height;
 		return intersection / (area1 + area2 - intersection);
 	}
+}
