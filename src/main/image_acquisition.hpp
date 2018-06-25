@@ -23,6 +23,7 @@ class ImageAcquisition
 		virtual ~ImageAcquisition();
 		void Init();
 
+		cv::Mat Get_init_RGB();
 
 		cv::Mat Get_first_RGB();
 		cv::Mat Get_Next_RGB();

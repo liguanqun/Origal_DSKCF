@@ -26,7 +26,7 @@ OcclusionHandler::OcclusionHandler(KcfParameters paras, std::shared_ptr<Kernel> 
 
 		this->singleFrameProTime = std::vector<int64>(8, 0);
 
-		this->m_weight_mul =0.1;
+		this->m_weight_mul =1;
 	}
 
 OcclusionHandler::~OcclusionHandler()

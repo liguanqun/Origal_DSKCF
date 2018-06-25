@@ -193,7 +193,13 @@ void ImageAcquisition::Init()
 cv::Mat ImageAcquisition::Get_first_RGB()
 	{
 		cv::Mat image = cv::imread(_FrameID_path[_rgb_FrameID]);
-		_rgb_FrameID++;
+		_rgb_FrameID ++;
+		return image;
+
+	}
+cv::Mat ImageAcquisition::Get_init_RGB()
+	{
+		cv::Mat image = cv::imread(_FrameID_path[_rgb_FrameID]);
 		return image;
 
 	}
