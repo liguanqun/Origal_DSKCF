@@ -25,6 +25,8 @@ OcclusionHandler::OcclusionHandler(KcfParameters paras, std::shared_ptr<Kernel> 
 		this->m_isOccluded = false;
 
 		this->singleFrameProTime = std::vector<int64>(8, 0);
+
+		this->m_weight_mul =0.1;
 	}
 
 OcclusionHandler::~OcclusionHandler()
@@ -86,7 +88,7 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 							{
 								for (int j = 0; j < 4; j++)
 									{
-										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) / 16;
+										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
 									}
 							}
 						if (weight.at<double>(cell_y, cell_x) > 1)
@@ -160,6 +162,7 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
+				FC::mulFeatures( features[ index ], this->m_weight );
 			});
 
 		features = this->m_featureProcessor->concatenate(features);
@@ -183,7 +186,8 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		int bin = this->m_depthSegmenter->update(frame[1], target);
 ////////////////////////////////////////////////////////////////////////////////////////
 		//根据最新预测的位置扩展 window 的位置
-				window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
+
+/*		window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
 				int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
 				int right_x = this->m_windowSize.width - left_x - 1;
 				int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
@@ -224,7 +228,7 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 									{
 										for (int j = 0; j < 4; j++)
 											{
-												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) / 16;
+												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
 											}
 									}
 								if (weight.at<double>(cell_y, cell_x) > 1)
@@ -242,28 +246,29 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 
 
 				//重新检测一次
-		        target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
+
+				std::vector<std::shared_ptr<FC> > features_second(2);
+
+		      //  target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
 			    window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
+			    cv::Point position_new = positions.back();
 			    positions.clear();
-				//tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
-				//	{
-						//features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
-						//FC::mulFeatures( features[ index ], this->m_cosineWindow );
-						FC::mulFeatures( features[ 0 ], this->m_weight );
-					//});
-
-				//features = this->m_featureProcessor->concatenate(features);
-						features =  features[ 0 ];
-				//std::vector<cv::Mat> frames_ = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
-
-			//	for (uint i = 0; i < features.size(); i++)
-				//	{
-						DetectResult result = this->m_targetTracker[0]->detect(frames_[0], features[0], position, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
+				tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features_second,&window]( uint index ) -> void
+					{
+						features_second[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
+						FC::mulFeatures( features_second[ index ], this->m_cosineWindow );
+						FC::mulFeatures( features_second[ index ], this->m_weight );
+					});
+				features_second = this->m_featureProcessor->concatenate(features_second);
+				std::vector<cv::Mat> frames_second = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
+				for (uint i = 0; i < features.size(); i++)
+					{
+						DetectResult result = this->m_targetTracker[i]->detect(frames_second[i], features_second[i], position_new, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
 						positions.push_back(result.position);
 						//responses.push_back(result.maxResponse);
-				//	}
+					}
 				target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
-				 bin = this->m_depthSegmenter->update(frame[1], target);
+				 bin = this->m_depthSegmenter->update(frame[1], target);*/
 
 ////////////////////////////////////////////////////////////////////////////////////////
 		DepthHistogram histogram = this->m_depthSegmenter->getHistogram();
@@ -366,7 +371,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 							{
 								for (int j = 0; j < 4; j++)
 									{
-										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) / 16;
+										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
 									}
 							}
 						if (weight.at<double>(cell_y, cell_x) > 1)
