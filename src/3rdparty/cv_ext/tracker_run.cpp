@@ -34,6 +34,8 @@ TrackerRun::TrackerRun(string windowTitle)
 		_frameIdx = 1;
 
 		_overlap_sum = 0;
+		_distance_sum=0;
+
 	}
 
 TrackerRun::~TrackerRun()
@@ -91,7 +93,8 @@ bool TrackerRun::init()
 		_boundingBox = _cap.Get_Init_Rect();
 		//_boundingBox = _cap.Get_Current_GroundTruth_Rect();
 		_hasInitBox = true;
-
+		this->_center.x = _boundingBox.x + _boundingBox.width / 2;
+		this->_center.y = _boundingBox.y + _boundingBox.height / 2;
 		//std::cout << "_hasInitBox is init as " << _hasInitBox << std::endl;
 
 		_frameIdx = 1;
@@ -213,13 +216,16 @@ bool TrackerRun::update()
 		center_truth.y = Current_GroundTruth.y + Current_GroundTruth.height / 2;
 		circle(hudImage, center_truth, 3, Scalar(255, 0, 0), 2);
 
-		//计算重合率
+		//计算重合率 和 移动距离
 		float overlap = this->Overlap(_boundingBox, Current_GroundTruth, _targetOnFrame);
 		_overlap_sum += overlap;
 		std::cout << "the current overlap is " << overlap << "   and the sum of it is  " << _overlap_sum << std::endl;
+        double distance = std::abs(center_truth.x -center.x) +std::abs(center_truth.y -center.y);
+        _distance_sum  += distance;
+        std::cout<<"the distance  is  "<<distance<<"   sum distance is "<<_distance_sum<<std::endl;
 
-		stringstream ss;
-		ss << "FPS: " << fps << "  sum_overlap is " << _overlap_sum;
+        stringstream ss;
+		ss << "FPS: " << fps << " overlap:" << overlap<<" distance:"<<distance;
 		putText(hudImage, ss.str(), cv::Point(20, 20), FONT_HERSHEY_TRIPLEX, 0.5, Scalar(255, 0, 0));
 
 		ss.str("");

@@ -104,6 +104,10 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 		this->m_weight.setTo(0);
 		this->m_weight = weight;
+
+/*		std::cout<<"weight == "<<std::endl<<this->m_weight<<std::endl;
+		cv::namedWindow("weight",0);
+		cv::imshow("weight",this->m_weight);*/
 	//	std::cout << "the mat of weight is " << std::endl << weight_pre << std::endl;
 		//Extract features
 		for (int i = 0; i < 2; i++)
@@ -386,8 +390,9 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 
 		this->m_weight.setTo(0);
 		this->m_weight = weight;
-
-
+/*        std::cout<<"weight == "<<std::endl<<this->m_weight<<std::endl;
+		cv::namedWindow("weight",0);
+		cv::imshow("weight",this->m_weight);*/
 		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );

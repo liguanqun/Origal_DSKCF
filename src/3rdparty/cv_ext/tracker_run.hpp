@@ -60,7 +60,13 @@ private:
     std::array< cv::Mat, 2 > _image;
     CfTracker* _tracker;
     std::string _windowTitle;
+
     float _overlap_sum;
+    double _distance_sum;
+    cv::Point_<double> _center;
+    //std::vector<double> _distance;
+    std::vector<float> _OVERLAP;
+
   //  Parameters _paras;
     cv::Rect_<double> _boundingBox;
      ImageAcquisition  _cap;

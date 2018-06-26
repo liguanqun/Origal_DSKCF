@@ -62,6 +62,7 @@ ScaleAnalyser::ScaleAnalyser(const std::vector<double> & scales, const double ou
 
 Rect ScaleAnalyser::init(const cv::Mat &, const Rect & boundingBox)
 	{
+
 		if ((boundingBox.width > 0) && (boundingBox.height > 0))
 			{
 				boundingBox.size();
