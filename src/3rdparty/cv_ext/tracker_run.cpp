@@ -31,9 +31,14 @@ TrackerRun::TrackerRun(string windowTitle)
 		_debug = 0;
 		_tracker = 0;
 		//	_paras = Parameters();
-		_frameIdx = 0;
+		_frameIdx = 1;
 
 		_overlap_sum = 0;
+		_distance_sum = 0;
+		_overlap_threshold = 0.5;
+		_distance_threshold = 20;
+		_overlap_success_frame = 0;
+		_distance_success_frame = 0;
 	}
 
 TrackerRun::~TrackerRun()
@@ -44,16 +49,102 @@ TrackerRun::~TrackerRun()
 				delete _tracker;
 				_tracker = 0;
 			}
+		this->_frameIdx -= 1;
+		std::cout << "total frame is " << this->_frameIdx << std::endl;
+		std::cout << "distance success " << this->_distance_success_frame << "  frames  rate is " << (double) (this->_distance_success_frame / this->_frameIdx) << std::endl;
+		std::cout << "overlap success  " << this->_overlap_success_frame << "  frames  rate is " << (double) (this->_overlap_success_frame / this->_frameIdx) << std::endl;
 
+		/***********************save the result rect and overlap data**************************/
+		/*		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
+		 ofstream outfile;
+		 std::string name = _cap._name + "_rect_result.txt";
+		 outfile.open(name.c_str(), ios::app);
+		 //cout.setf(ios::fixed);
+		 outfile.unsetf(ios::fixed);
+		 outfile << _boundingBox.x << "," << _boundingBox.y << "," << _boundingBox.width << "," << _boundingBox.height << ",";
+		 outfile.setf(ios::fixed);
+		 outfile << std::setprecision(5) << overlap << ",";
+		 outfile.unsetf(ios::fixed);
+		 outfile << _frameIdx << "\n";
+		 outfile.close();*/
+
+		/**************************************************************************/
+		 ofstream outfile;
+		 std::string name = _cap._name + "_distance_result.txt";
+		 outfile.open(name.c_str(), ios::app);
+		std::vector<int> distance_resut;
+		for (int i = 0; i < 50; i++)
+			{
+				int a = 0;
+				//double rate = 0;
+				for (int j = 0; j < this->_center_err.size(); j++)
+					{
+						if (this->_center_err[j] <= i)
+							a++;
+					}
+				std::cout << i << " ";
+				//rate = (double) (a / this->_center_err.size());
+				distance_resut.push_back(a);
+				outfile << a<<",";
+			}
+		std::cout<< std::endl;
+		outfile.close();
+
+		cv::Mat hist_picture(this->_center_err.size(), distance_resut.size()*8, CV_8UC3, cv::Scalar(255, 255, 255));
+		for (int i = 1; i < distance_resut.size(); i++)
+			{
+				cv::Point p1 = cv::Point((i-1)*8, hist_picture.rows- distance_resut[i-1] );
+				cv::Point p2 = cv::Point(i*8, hist_picture.rows - distance_resut[i]);
+				cv::line(hist_picture, p1, p2, cv::Scalar(255, 0, 0),3);
+			}
+		cv::namedWindow("distance success", 0);
+		cv::imshow("distance success", hist_picture);
+
+///*******************************************************************************/
+		 ofstream outfile_overlap;
+		 std::string name_overlap = _cap._name + "_overlap_result.txt";
+		 outfile_overlap.open(name_overlap.c_str(), ios::app);
+		std::vector<int> overlap_resut;
+
+		for (int i = 0; i < 100; i++)
+			{
+				int a = 0;
+				//double rate = 0;
+				for (int j = 0; j < this->_OVERLAP.size(); j++)
+					{
+						if (this->_OVERLAP[j]*100 >= i)
+							a++;
+					}
+
+				std::cout << i << "  " ;
+				//rate = (double) (a / this->_center_err.size());
+				overlap_resut.push_back(a);
+				outfile_overlap << a<<",";
+			}
+		std::cout<< std::endl;
+		outfile_overlap.close();
+
+		cv::Mat hist_picture_overlap(this->_OVERLAP.size(), overlap_resut.size()*8, CV_8UC3, cv::Scalar(255, 255, 255));
+		for (int i = 1; i < overlap_resut.size(); i++)
+			{
+				cv::Point p1 = cv::Point((i-1)*8, hist_picture_overlap.rows- overlap_resut[i-1] );
+				cv::Point p2 = cv::Point(i*8, hist_picture_overlap.rows - overlap_resut[i]);
+				cv::line(hist_picture_overlap, p1, p2, cv::Scalar(0, 0, 255),3);
+			}
+		cv::namedWindow("overlap success", 0);
+		cv::imshow("overlap success", hist_picture_overlap);
+
+		cv::waitKey(0);
 		std::cout << "Frame,Time" << std::endl;
 
-		for (int i = 0; i < (int) this->frameTime.size(); i++)
-			{
-				std::cout << i << "," << this->frameTime[i] << std::endl;
-			}
+		/*		for (int i = 0; i < (int) this->frameTime.size(); i++)
+		 {
+		 //frameID 是从1开始的，这里对齐
+		 std::cout << i+1 << "," << this->frameTime[i] << std::endl;
+		 }*/
 
 		std::cout << "min," << *std::min_element(this->frameTime.begin(), this->frameTime.end()) << std::endl;
-		std::cout << "min," << *std::max_element(this->frameTime.begin(), this->frameTime.end()) << std::endl;
+		std::cout << "max," << *std::max_element(this->frameTime.begin(), this->frameTime.end()) << std::endl;
 		std::cout << "mean," << std::accumulate(this->frameTime.begin(), this->frameTime.end(), 0.0) / static_cast<double>(this->frameTime.size()) << std::endl;
 	}
 
@@ -87,11 +178,10 @@ bool TrackerRun::init()
 
 		namedWindow(_windowTitle.c_str());
 
-
 		_boundingBox = _cap.Get_Init_Rect();
 		_hasInitBox = true;
 
-		_frameIdx = 0;
+		_frameIdx = 1;
 		return true;
 	}
 
@@ -107,7 +197,7 @@ bool TrackerRun::run()
 					}
 			}
 
-		return true;
+		return false;
 	}
 
 bool TrackerRun::update()
@@ -115,21 +205,19 @@ bool TrackerRun::update()
 		int64 tStart = 0;
 		int64 tDuration = 0;
 
-		if (_frameIdx == 0)
+		if (_frameIdx == 1)
 			{
-
-				_image[0]=_cap.Get_first_RGB();
-				_image[1]=_cap.Get_Depth_Image_same_time_to_RGB();
+				_image[0] = _cap.Get_first_RGB();
+				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB();
 				if (_image[0].empty() || _image[1].empty())
 					{
 						return false;
 					}
-
 			}
 		else
 			{
-				_image[0]=_cap.Get_Next_RGB();
-				_image[1]=_cap.Get_Depth_Image_same_time_to_RGB();
+				_image[0] = _cap.Get_Next_RGB();
+				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB();
 				if (_image[0].empty() || _image[1].empty())
 					{
 						return false;
@@ -137,7 +225,7 @@ bool TrackerRun::update()
 
 			}
 
-		if (_frameIdx == 0)
+		if (_frameIdx == 1)
 			{
 				if (!_hasInitBox)
 					{
@@ -157,9 +245,8 @@ bool TrackerRun::update()
 
 				tDuration = getTickCount() - tStart;
 
-
 			}
-		else if (_frameIdx >= 1)
+		else if (_frameIdx > 1)
 			{
 				tStart = getTickCount();
 
@@ -168,8 +255,6 @@ bool TrackerRun::update()
 				cv::resize(_image[1], resized[1], cv::Size_<double>(_image[1].cols / SCALE, _image[1].rows / SCALE), 0, 0, cv::INTER_NEAREST);
 
 				cv::Rect_<double> r(_boundingBox.x / SCALE, _boundingBox.y / SCALE, _boundingBox.width / SCALE, _boundingBox.height / SCALE);
-
-
 
 				//Tracker Running HERE
 				std::vector<int64> singleFrameTiming(8);
@@ -186,7 +271,6 @@ bool TrackerRun::update()
 				_boundingBox.height = r.height * SCALE;
 
 				_boundingBox = rectRound(_boundingBox);
-
 
 				tDuration = getTickCount() - tStart;
 			}
@@ -219,13 +303,26 @@ bool TrackerRun::update()
 		center_truth.y = Current_GroundTruth.y + Current_GroundTruth.height / 2;
 		circle(hudImage, center_truth, 3, Scalar(255, 0, 0), 2);
 
-		//计算重合率
-		float overlap = Overlap(_boundingBox, Current_GroundTruth,_targetOnFrame);
-		_overlap_sum += overlap;
+		//计算重合率 和 移动距离
+		this->_rect_result.push_back(_boundingBox);
+		float overlap = this->Overlap(_boundingBox, Current_GroundTruth, _targetOnFrame);
+		this->_OVERLAP.push_back(overlap);
+		this->_overlap_sum += overlap;
 		std::cout << "the current overlap is " << overlap << "   and the sum of it is  " << _overlap_sum << std::endl;
+		double distance = std::abs(center_truth.x - center.x) + std::abs(center_truth.y - center.y);
+		this->_center_err.push_back(distance);
+		this->_distance_sum += distance;
+		std::cout << "the distance  is  " << distance << "   sum distance is " << _distance_sum << std::endl;
+
+		if (overlap >= this->_overlap_threshold)
+			this->_overlap_success_frame += 1;
+		if (distance <= this->_distance_threshold)
+			this->_distance_success_frame += 1;
+
+		std::cout << "overlap success " << this->_overlap_success_frame << " times" << std::endl << "distance success " << _distance_success_frame << "times" << std::endl;
 
 		stringstream ss;
-		ss << "FPS: " << fps<<"   sum_overlap is "<<_overlap_sum;
+		ss << "FPS: " << fps << "current overlap:" << overlap << " distance:" << distance;
 		putText(hudImage, ss.str(), cv::Point(20, 20), FONT_HERSHEY_TRIPLEX, 0.5, Scalar(255, 0, 0));
 
 		ss.str("");
@@ -244,76 +341,54 @@ bool TrackerRun::update()
 
 		imshow(_windowTitle.c_str(), hudImage);
 
-		if (_frameIdx == 0)
-			waitKey(0);
-		else
-			cv::waitKey(33);
-		waitKey(0);
-
+		waitKey(3);
 		++_frameIdx;
-		/***********************save the result rect and overlap data**************************/
-		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
-		ofstream outfile;
-		std::string name = _cap._name + ".txt";
-		outfile.open(name.c_str(), ios::app);
-		//cout.setf(ios::fixed);
-		outfile.unsetf(ios::fixed);
-		outfile << _boundingBox.x << "," << _boundingBox.y << "," << _boundingBox.width << "," << _boundingBox.height << ",";
-		outfile.setf(ios::fixed);
-		outfile << std::setprecision(5) << overlap << ",";
-		outfile.unsetf(ios::fixed);
-		outfile << _frameIdx << "\n";
-		outfile.close();
+		/*		stringstream stream;
+		 stream << "train_detect" << _frameIdx<<".jpg";
 
-/*		stringstream stream;
-		stream << "train_detect" << _frameIdx<<".jpg";
-
-		cv::imwrite(stream.str(), hudImage);*/
+		 cv::imwrite(stream.str(), hudImage);*/
 		std::cout << std::endl << std::endl;
 
 		return true;
 	}
 
-
-
 void TrackerRun::setTrackerDebug(TrackerDebug* debug)
 	{
 		_debug = debug;
 	}
-float TrackerRun::Overlap(const cv::Rect_<double>& boundBox,
-		const cv::Rect_<double>& groundtruth, bool targetOnFrame)
-{
-	if ((!targetOnFrame) && groundtruth.area() == 0)
+float TrackerRun::Overlap(const cv::Rect_<double>& boundBox, const cv::Rect_<double>& groundtruth, bool targetOnFrame)
 	{
-		return 1.0;
+		if ((!targetOnFrame) && groundtruth.area() == 0)
+			{
+				return 1.0;
+			}
+		else if ((!targetOnFrame && groundtruth.area() != 0) || (targetOnFrame && groundtruth.area() == 0))
+			{
+				return -1;
+			}
+		else
+			{
+				if (boundBox.x > groundtruth.x + groundtruth.width)
+					{
+						return 0.0;
+					}
+				if (boundBox.y > groundtruth.y + groundtruth.height)
+					{
+						return 0.0;
+					}
+				if (boundBox.x + boundBox.width < groundtruth.x)
+					{
+						return 0.0;
+					}
+				if (boundBox.y + boundBox.height < groundtruth.y)
+					{
+						return 0.0;
+					}
+				float colInt = min(boundBox.x + boundBox.width, groundtruth.x + groundtruth.width) - max(boundBox.x, groundtruth.x);
+				float rowInt = min(boundBox.y + boundBox.height, groundtruth.y + groundtruth.height) - max(boundBox.y, groundtruth.y);
+				float intersection = colInt * rowInt;
+				float area1 = boundBox.width * boundBox.height;
+				float area2 = groundtruth.width * groundtruth.height;
+				return intersection / (area1 + area2 - intersection);
+			}
 	}
-	else if ((!targetOnFrame && groundtruth.area() != 0)|| (targetOnFrame && groundtruth.area() == 0))
-	{
-		return -1;
-	}
-	else
-	{
-		if (boundBox.x > groundtruth.x + groundtruth.width)
-		{
-			return 0.0;
-		}
-		if (boundBox.y > groundtruth.y + groundtruth.height)
-		{
-			return 0.0;
-		}
-		if (boundBox.x + boundBox.width < groundtruth.x)
-		{
-			return 0.0;
-		}
-		if (boundBox.y + boundBox.height < groundtruth.y)
-		{
-			return 0.0;
-		}
-		float colInt = min(boundBox.x + boundBox.width,groundtruth.x + groundtruth.width)- max(boundBox.x, groundtruth.x);
-		float rowInt = min(boundBox.y + boundBox.height,groundtruth.y + groundtruth.height)- max(boundBox.y, groundtruth.y);
-		float intersection = colInt * rowInt;
-		float area1 = boundBox.width * boundBox.height;
-		float area2 = groundtruth.width * groundtruth.height;
-		return intersection / (area1 + area2 - intersection);
-	}
-}
