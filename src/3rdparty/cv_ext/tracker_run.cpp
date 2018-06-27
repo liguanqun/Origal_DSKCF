@@ -94,6 +94,15 @@ bool TrackerRun::start(int argc, const char** argv)
 
 		this->_tracker = new DskcfTracker();
 
+        if(argc==2)
+        	{
+        		this->_cap._path = argv[1];
+        		std::cout<<argv[1]<<std::endl;
+        	}
+        else
+        	{
+        		return false;
+        	}
 		this->init();
 		while (this->run());
 
