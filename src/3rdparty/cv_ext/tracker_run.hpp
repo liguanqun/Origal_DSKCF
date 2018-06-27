@@ -8,6 +8,7 @@
 //  Princeton RGBD data: Shuran Song and Jianxiong Xiao. Tracking Revisited using RGBD Camera: Baseline and Benchmark. 2013.
 */
 
+
 #ifndef TRACKER_RUN_HPP_
 #define TRACKER_RUN_HPP_
 
@@ -20,24 +21,7 @@
 #include "image_acquisition.hpp"
 #include "dskcf_tracker.hpp"
 
-struct Parameters{
-    std::string sequencePathRGB;
-    std::string sequencePathDepth;
-    std::string outputFilePath;
-    std::string imgExportPath;
-    std::string expansionRGB;
-    std::string expansionDepth;
-    cv::Rect initBb;
-    int deviceRGB;
-    int deviceDepth;
-    int startFrame;
-    bool showOutput;
-    bool paused;
-    bool repeat;
-    bool isMockSequenceRGB;
-    bool isMockSequenceDepth;
-	bool useDepth;
-};
+
 
 class TrackerRun
 {
@@ -45,17 +29,15 @@ public:
     TrackerRun(std::string windowTitle);
     virtual ~TrackerRun();
     bool start(int argc, const char** argv);
-    void setTrackerDebug(TrackerDebug* debug);
+
 
 private:
- //   Parameters parseCmdArgs(int argc, const char** argv);
+
     bool init();
     bool run();
     bool update();
 
-    float Overlap(const cv::Rect_<double>& boundBox, const cv::Rect_<double>& groundtruth,bool targetOnFrame);
-//protected:
-//    virtual CfTracker* parseTrackerParas(TCLAP::CmdLine& cmd, int argc, const char** argv) = 0;
+    float Overlap(const cv::Rect_<double>& boundBox,const cv::Rect_<double>& groundtruth, bool targetOnFrame);
 private:
     std::array< cv::Mat, 2 > _image;
     CfTracker* _tracker;
@@ -63,25 +45,19 @@ private:
 
     float _overlap_sum;
     double _distance_sum;
-    cv::Point_<double> _center;
-    //std::vector<double> _distance;
+    int    _overlap_success_frame,_distance_success_frame;
+    int  _overlap_threshold,_distance_threshold;
+    std::vector<double> _center_err;
+    std::vector<cv::Rect_<double>> _rect_result;
     std::vector<float> _OVERLAP;
 
-  //  Parameters _paras;
+
     cv::Rect_<double> _boundingBox;
      ImageAcquisition  _cap;
 
-    TCLAP::CmdLine _cmd;
-    TrackerDebug* _debug;
     int _frameIdx;
-    bool _isPaused;
-    bool _isStep;
-    bool _exit;
     bool _hasInitBox;
-    bool _isTrackerInitialzed;
     bool _targetOnFrame;
-    bool _updateAtPos;
-	int _imageIndex;
 	std::vector< double > frameTime;
 };
 

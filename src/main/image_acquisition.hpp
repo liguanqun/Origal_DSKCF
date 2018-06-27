@@ -34,8 +34,6 @@ class ImageAcquisition
 
         cv::Rect Get_Current_GroundTruth_Rect(void);
 
-		bool Get_Depth_Image(int k,cv::Mat& image);
-		bool Get_RGB_Image(int k, cv::Mat& image);
 
 		void Get_Time_And_K(std::string str, int & t, int & k);
 		cv::Mat Shift_Bit_Depth_Image(cv::Mat& image);
