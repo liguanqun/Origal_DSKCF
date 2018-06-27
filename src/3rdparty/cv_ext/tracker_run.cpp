@@ -45,89 +45,37 @@ TrackerRun::~TrackerRun()
 		std::cout << "distance success " << this->_distance_success_frame << "  frames " << std::endl;
 		std::cout << "overlap success  " << this->_overlap_success_frame << "  frames " << std::endl;
 
-		/***********************save the result rect and overlap data**************************/
-		/*		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
-		 ofstream outfile;
-		 std::string name = _cap._name + "_rect_result.txt";
-		 outfile.open(name.c_str(), ios::app);
-		 //cout.setf(ios::fixed);
-		 outfile.unsetf(ios::fixed);
-		 outfile << _boundingBox.x << "," << _boundingBox.y << "," << _boundingBox.width << "," << _boundingBox.height << ",";
-		 outfile.setf(ios::fixed);
-		 outfile << std::setprecision(5) << overlap << ",";
-		 outfile.unsetf(ios::fixed);
-		 outfile << _frameIdx << "\n";
-		 outfile.close();*/
+
 
 		/**************************************************************************/
-		 ofstream outfile;
-		 std::string name = _cap._name + "_distance_result.txt";
-		 outfile.open(name.c_str(), ios::app);
-		std::vector<int> distance_resut;
-		std::cout<<"distance:";
-		for (int i = 0; i < 50; i++)
-			{
-				int a = 0;
-				//double rate = 0;
-				for (int j = 0; j < this->_center_err.size(); j++)
-					{
-						if (this->_center_err[j] <= i)
-							a++;
-					}
-				std::cout << a << " ";
-				//rate = (double) (a / this->_center_err.size());
-				distance_resut.push_back(a);
-				outfile << a<<",";
-			}
-		std::cout<< std::endl;
-		outfile.close();
+		 ofstream outfile_distance_err;
+		 std::string name = "weight_"+ _cap._name + "_distance_err.txt";
+		 outfile_distance_err.open(name.c_str(), ios::app);
+		 outfile_distance_err.setf(ios::fixed);
+			for (int j = 0; j < this->_center_err.size(); j++)
+				{   double err;
+					err = this->_center_err[j];
+					outfile_distance_err << std::setprecision(1)<< err<<",";
+				}
+			outfile_distance_err << "\n";
+			outfile_distance_err.close();
 
-		cv::Mat hist_picture(this->_center_err.size(), distance_resut.size()*8, CV_8UC3, cv::Scalar(255, 255, 255));
-		for (int i = 1; i < distance_resut.size(); i++)
-			{
-				cv::Point p1 = cv::Point((i-1)*8, hist_picture.rows- distance_resut[i-1] );
-				cv::Point p2 = cv::Point(i*8, hist_picture.rows - distance_resut[i]);
-				cv::line(hist_picture, p1, p2, cv::Scalar(255, 0, 0),3);
-			}
-		cv::namedWindow("distance success", 0);
-		cv::imshow("distance success", hist_picture);
+
 
 ///*******************************************************************************/
 		 ofstream outfile_overlap;
-		 std::string name_overlap = _cap._name + "_overlap_result.txt";
+		 std::string name_overlap = "weight_"+_cap._name + "_overlap.txt";
 		 outfile_overlap.open(name_overlap.c_str(), ios::app);
-		std::vector<int> overlap_resut;
+		 outfile_overlap.setf(ios::fixed);
+			for (int j = 0; j < this->_OVERLAP.size(); j++)
+				{
+					double overlap= this->_OVERLAP[j];
+					outfile_overlap << std::setprecision(5)<< overlap<<",";
 
-		std::cout<<"overlap:";
-		for (int i = 0; i < 100; i++)
-			{
-				int a = 0;
-				//double rate = 0;
-				for (int j = 0; j < this->_OVERLAP.size(); j++)
-					{
-						if (this->_OVERLAP[j]*100 >= i)
-							a++;
-					}
+				}
+			outfile_overlap <<"\n";
+			outfile_overlap.close();
 
-				std::cout << a << "  " ;
-				//rate = (double) (a / this->_center_err.size());
-				overlap_resut.push_back(a);
-				outfile_overlap << a<<",";
-			}
-		std::cout<< std::endl;
-		outfile_overlap.close();
-
-		cv::Mat hist_picture_overlap(this->_OVERLAP.size(), overlap_resut.size()*8, CV_8UC3, cv::Scalar(255, 255, 255));
-		for (int i = 1; i < overlap_resut.size(); i++)
-			{
-				cv::Point p1 = cv::Point((i-1)*8, hist_picture_overlap.rows- overlap_resut[i-1] );
-				cv::Point p2 = cv::Point(i*8, hist_picture_overlap.rows - overlap_resut[i]);
-				cv::line(hist_picture_overlap, p1, p2, cv::Scalar(0, 0, 255),3);
-			}
-		cv::namedWindow("overlap success", 0);
-		cv::imshow("overlap success", hist_picture_overlap);
-
-		cv::waitKey(0);
 		std::cout << "Frame,Time" << std::endl;
 
 		/*		for (int i = 0; i < (int) this->frameTime.size(); i++)
@@ -294,6 +242,34 @@ bool TrackerRun::update()
 		this->_center_err.push_back(distance);
 		this->_distance_sum += distance;
 		std::cout << "the distance  is  " << distance << "   sum distance is " << _distance_sum << std::endl;
+       //画出实时的曲线
+		cv::Mat hist_picture(600, this->_cap._size*3, CV_8UC3, cv::Scalar(255, 255, 255));
+
+		cv::Point p3 = cv::Point(0, hist_picture.rows-20*6 );
+		cv::Point p4 = cv::Point(this->_cap._size*3-1, hist_picture.rows - 20*6);
+		cv::line(hist_picture, p3, p4, cv::Scalar(255, 0, 0),1);
+
+		for (int i = 1; i < this->_center_err.size(); i++)
+			{
+				cv::Point p1 = cv::Point((i-1)*3, hist_picture.rows- this->_center_err[i-1]*6 );
+				cv::Point p2 = cv::Point(i*3, hist_picture.rows - this->_center_err[i]*6);
+				cv::line(hist_picture, p1, p2, cv::Scalar(255, 0, 0),1);
+			}
+		cv::namedWindow("distance success", 0);
+		cv::imshow("distance success", hist_picture);
+		cv::Mat hist_picture_overlap(600,this->_cap._size*3, CV_8UC3, cv::Scalar(255, 255, 255));
+		cv::Point p5 = cv::Point(0, hist_picture_overlap.rows- 50*6 );
+		cv::Point p6 = cv::Point(this->_cap._size*3-1, hist_picture_overlap.rows - 50*6);
+		cv::line(hist_picture_overlap, p5, p6, cv::Scalar(0, 0, 255),1);
+		for (int i = 1; i <this->_OVERLAP.size(); i++)
+			{
+				cv::Point p1 = cv::Point((i-1)*3, hist_picture_overlap.rows- this->_OVERLAP[i-1]*100*6 );
+				cv::Point p2 = cv::Point(i*3, hist_picture_overlap.rows - this->_OVERLAP[i]*100*6);
+				cv::line(hist_picture_overlap, p1, p2, cv::Scalar(0, 0, 255),1);
+			}
+		cv::namedWindow("overlap success", 0);
+		cv::imshow("overlap success", hist_picture_overlap);
+
 
 		if (overlap >= this->_overlap_threshold)
 			this->_overlap_success_frame += 1;
@@ -322,7 +298,7 @@ bool TrackerRun::update()
 
 		imshow(_windowTitle.c_str(), hudImage);
 
-		waitKey(3);
+		waitKey(0);
 		++_frameIdx;
 
 		std::cout << std::endl << std::endl;

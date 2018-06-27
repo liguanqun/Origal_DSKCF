@@ -158,6 +158,8 @@ add_executable(DSKCF
     ${CF_MAIN_SOURCES}
     ${CF_LIB_COMMON_SOURCES})
 	
+add_executable(test  src/main/test.cpp)
+target_link_libraries(test ${OpenCV_LIBS})
 
 IF(CMAKE_BUILD_TYPE MATCHES Release)
 	message("RELEASE")

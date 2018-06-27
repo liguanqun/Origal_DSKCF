@@ -14,7 +14,6 @@ ImageAcquisition::ImageAcquisition()
 //遮挡物特别大，遮挡之后的恢复问题
 //cc_occ1  express1_occ express2_occ  new_ex_occ1 new_ex_occ3  rose1.2"
 		_rgb_FrameID = 1;
-		_depth_FrameID = 1;
 		//  /home/orbbec/Downloads/data/ValidationSet/child_no1/
 		//zcup_move_1  bear_front child_no1 new_ex_occ4 face_occ5
 
@@ -209,7 +208,6 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 		if (_rgb_FrameID <= _size)
 			{
 				image = cv::imread(_FrameID_path[_rgb_FrameID]);
-				std::cout<<_FrameID_path[_rgb_FrameID]<<std::endl;
 				_rgb_FrameID++;
 
 			}
