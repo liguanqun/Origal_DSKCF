@@ -38,14 +38,15 @@ class ImageAcquisition
 		cv::Mat Shift_Bit_Depth_Image(cv::Mat& image);
 
         std::string _name;
-
+        std::string _path;
+        int _size;
 	private:
-        const std::string _path;
+
 		std::map<int, std::string> _FrameID_path, _FrameID_path_depth;
 		std::map<int, cv::Rect> _FrameID_rect;
 		std::map<int, int> _FrameID_t, _FrameID_t_depth;
 		std::map<int, int> _RGB_DEPTH_ID;
-		int _size, _rgb_FrameID, _depth_FrameID;
+		int _rgb_FrameID;
 
 	};
 
