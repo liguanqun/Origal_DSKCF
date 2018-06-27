@@ -47,7 +47,7 @@ TrackerRun::~TrackerRun()
 
 		/**************************************************************************/
 		ofstream outfile_distance_err;
-		std::string name ="weight"+ _cap._name + "_distance_err.txt";
+		std::string name ="weight_"+ _cap._name + "_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
 		for (int j = 0; j < this->_center_err.size(); j++)
@@ -61,7 +61,7 @@ TrackerRun::~TrackerRun()
 
 ///*******************************************************************************/
 		ofstream outfile_overlap;
-		std::string name_overlap ="weight"+ _cap._name + "_overlap.txt";
+		std::string name_overlap ="weight_"+ _cap._name + "_overlap.txt";
 		outfile_overlap.open(name_overlap.c_str(), ios::app);
 		outfile_overlap.setf(ios::fixed);
 		for (int j = 0; j < this->_OVERLAP.size(); j++)
