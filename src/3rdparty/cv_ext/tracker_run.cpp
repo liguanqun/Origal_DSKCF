@@ -113,9 +113,8 @@ bool TrackerRun::run()
 					}
 			}
 
-		return true;
+		return false;
 	}
-
 bool TrackerRun::update()
 	{
 		int64 tStart = 0;
