@@ -18,7 +18,7 @@
 using namespace std;
 using namespace cv;
 void read_data(std::string path, std::vector<double>& data_save, int fixed_precisious);
-void plot_cruve(std::vector<double> data, std::string windoe_title, int longth, int step, int threshold, cv::Scalar scalar, bool flag);
+void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, int longth, int step, int threshold, cv::Scalar scalar,cv::Scalar scalar_a, bool flag);
 int main()
 	{
 
@@ -30,10 +30,18 @@ int main()
 
 		path = "weight_child_no1_overlap.txt";
 		read_data(path, weight_overlap, 5);
+
+		path = "child_no1_distance_err.txt";
+		read_data(path, distance_err, 1);
+
+		path = "child_no1_overlap.txt";
+		read_data(path, overlap, 5);
+
 		cv::namedWindow("distance_err", 0);
 		cv::namedWindow("overlap", 0);
-		plot_cruve(weight_distance_err, "distance_err", 50, 1, 20, cv::Scalar(255, 0, 0), true);
-		plot_cruve(weight_overlap, "overlap", 100, 100, 50, cv::Scalar(0, 255, 0), false);
+		plot_cruve(weight_distance_err, distance_err, "distance_err", 50, 1, 20, cv::Scalar(255, 0, 0),cv::Scalar(0, 255, 0), true);
+		plot_cruve(weight_overlap, overlap, "overlap", 100, 100, 50, cv::Scalar(255, 0, 0),cv::Scalar(0, 255, 0), false);
+
 		cv::waitKey(0);
 
 //cv::waitKey(0);
@@ -69,60 +77,74 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 		myfile.close();
 	}
 
-void plot_cruve(std::vector<double> data, std::string windoe_title, int longth, int step, int threshold, cv::Scalar scalar, bool flag)
+void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, int longth, int step, int threshold, cv::Scalar scalar,cv::Scalar scalar_a, bool flag)
 	{
-		std::vector<int> resut;
-		for (int i = 0; i < longth; i++)
+		std::cout<<"size "<<data.size()<<"  "<<data1.size()<<std::endl;
+		if (data.size() == data1.size())
 			{
-				int a = 0;
-				for (int j = 0; j < data.size(); j++)
+				std::vector<int> resut, resut_a;
+				for (int i = 0; i < longth; i++)
 					{
-						if (flag)
+						int a = 0, b = 0;
+						for (int j = 0; j < data.size(); j++)
 							{
-								if (data[j] * step <= i)
-									a++;
+								if (flag)
+									{
+										if (data[j] * step <= i)
+											a++;
+										if (data1[j] * step <= i)
+											b++;
+									}
+								else
+									{
+										if (data[j] * step >= i)
+											a++;
+										if (data1[j] * step >= i)
+											b++;
+									}
+
 							}
-						else
+						std::cout << a << " " << b << " ; ";
+						resut.push_back(a);
+						resut_a.push_back(b);
+
+					}
+				std::cout << std::endl;
+
+				cv::Mat hist_picture(data.size(), resut.size() * 3, CV_8UC3, cv::Scalar(255, 255, 255));
+				for (int i = 1; i < resut.size(); i++)
+					{
+						cv::Point p1 = cv::Point((i - 1) * 3, hist_picture.rows - resut[i - 1]);
+						cv::Point p2 = cv::Point(i * 3, hist_picture.rows - resut[i]);
+						cv::line(hist_picture, p1, p2, scalar, 2);
+					}
+				for (int i = 1; i < resut.size(); i++)
+					{
+						cv::Point p1 = cv::Point((i - 1) * 3, hist_picture.rows - resut_a[i - 1]);
+						cv::Point p2 = cv::Point(i * 3, hist_picture.rows - resut_a[i]);
+						cv::line(hist_picture, p1, p2, scalar_a, 2);
+					}
+				for (int i = 4; i < longth; i++)
+					{
+						if ((i + 1) % 5 == 0)
 							{
-								if (data[j] * step >= i)
-									a++;
+								cv::Point p1 = cv::Point(i * 3, hist_picture.rows);
+								cv::Point p2 = cv::Point(i * 3, hist_picture.rows - 5);
+								cv::line(hist_picture, p1, p2, cv::Scalar(0, 0, 0), 1);
 							}
-
 					}
-				std::cout << a << "  ";
-				resut.push_back(a);
-
-			}
-		std::cout << std::endl;
-
-		cv::Mat hist_picture(data.size(), resut.size() * 3, CV_8UC3, cv::Scalar(255, 255, 255));
-		for (int i = 1; i < resut.size(); i++)
-			{
-				cv::Point p1 = cv::Point((i - 1) * 3, hist_picture.rows - resut[i - 1]);
-				cv::Point p2 = cv::Point(i * 3, hist_picture.rows - resut[i]);
-				cv::line(hist_picture, p1, p2, scalar, 2);
-			}
-		for (int i = 4; i < longth; i++)
-			{
-				if ((i + 1) % 5 == 0)
+				for (int i = 0; i < data.size(); i++)
 					{
-						cv::Point p1 = cv::Point(i * 3, hist_picture.rows);
-						cv::Point p2 = cv::Point(i * 3, hist_picture.rows - 5);
-						cv::line(hist_picture, p1, p2, cv::Scalar(0,0,0), 1);
+						if ((i + 1) % ((int) (data.size() / 20)) == 0)
+							{
+								cv::Point p1 = cv::Point(0, i);
+								cv::Point p2 = cv::Point(5, i);
+								cv::line(hist_picture, p1, p2, cv::Scalar(0, 0, 0), 1);
+							}
 					}
+				cv::Point p1 = cv::Point((threshold - 1) * 3, 0);
+				cv::Point p2 = cv::Point((threshold - 1) * 3, hist_picture.rows);
+				cv::line(hist_picture, p1, p2, scalar, 1);
+				cv::imshow(windoe_title, hist_picture);
 			}
-		for (int i = 0; i < data.size(); i++)
-			{
-				if ((i + 1) % ((int)(data.size()/20)) == 0)
-					{
-						cv::Point p1 = cv::Point(0 ,i);
-						cv::Point p2 = cv::Point(5 ,i);
-						cv::line(hist_picture, p1, p2, cv::Scalar(0,0,0), 1);
-					}
-			}
-		cv::Point p1 = cv::Point((threshold-1) * 3, 0);
-		cv::Point p2 = cv::Point((threshold-1) * 3, hist_picture.rows);
-		cv::line(hist_picture, p1, p2, scalar, 1);
-		cv::imshow(windoe_title, hist_picture);
-
 	}
