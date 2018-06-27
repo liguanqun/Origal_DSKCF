@@ -213,83 +213,16 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 	return image;
 
 }
-bool ImageAcquisition::Get_RGB_Image(int k, cv::Mat& image)
-{
 
-	if (k == 0)
-	{
-		image = cv::imread(_FrameID_path[1]);
-		double time_diff = ((double) (_FrameID_t_depth[1] - _FrameID_t[1]))
-				/ 33333;
-		std::cout << "the " << _rgb_FrameID
-				<< " frame RGB and depth time diff is " << time_diff
-				<< std::endl;
-		//	char k; std::cin>>k;
-		//std::cout << "*******************************************************"<< std::endl;
-
-		return true;
-	}
-
-	else if (k == 1)
-	{
-		_rgb_FrameID += 1;
-		if (_rgb_FrameID < _size)
-		{
-			image = cv::imread(_FrameID_path[_rgb_FrameID]);
-
-			double time_diff = ((double) (_FrameID_t_depth[_rgb_FrameID]
-					- _FrameID_t[_rgb_FrameID])) / 33333;
-			std::cout << "the " << _rgb_FrameID
-					<< " frame RGB and depth time diff is " << time_diff
-					<< std::endl;
-			//		char k; std::cin>>k;
-			//std::cout << "*******************************************************"<< std::endl;
-			return true;
-		}
-		else
-			return false;
-	}
-	else
-		return false;
-}
 cv::Rect ImageAcquisition::Get_Current_GroundTruth_Rect(void)
 {
-	cv::Rect r = _FrameID_rect[_rgb_FrameID];
+	cv::Rect r = _FrameID_rect[_rgb_FrameID-1];
 	return r;
 }
-bool ImageAcquisition::Get_Depth_Image(int k, cv::Mat& image)
-{
 
-	if (k == 0)
-	{
-		image = cv::imread(_FrameID_path_depth[1], CV_LOAD_IMAGE_ANYDEPTH);
-		image = Shift_Bit_Depth_Image(image);
-
-		return true;
-	}
-	else if (k == 1)
-	{
-		_depth_FrameID += 1;
-		if (_depth_FrameID < _size)
-		{
-
-			image = cv::imread(_FrameID_path_depth[_depth_FrameID],
-					CV_LOAD_IMAGE_ANYDEPTH);
-			image = Shift_Bit_Depth_Image(image);
-			return true;
-		}
-		else
-		{
-			std::cout << "there is no depth image " << std::endl;
-			return false;
-		}
-	}
-	else
-		return false;
-}
 cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB()
 {
-	int ask = _RGB_DEPTH_ID[_rgb_FrameID];
+	int ask = _RGB_DEPTH_ID[_rgb_FrameID-1];
 	cv::Mat depth;
 	if (ask < _size)
 	{

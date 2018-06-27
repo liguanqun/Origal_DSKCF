@@ -51,8 +51,8 @@ TrackerRun::~TrackerRun()
 			}
 		this->_frameIdx -= 1;
 		std::cout << "total frame is " << this->_frameIdx << std::endl;
-		std::cout << "distance success " << this->_distance_success_frame << "  frames  rate is " << (double) (this->_distance_success_frame / this->_frameIdx) << std::endl;
-		std::cout << "overlap success  " << this->_overlap_success_frame << "  frames  rate is " << (double) (this->_overlap_success_frame / this->_frameIdx) << std::endl;
+		std::cout << "distance success " << this->_distance_success_frame << "  frames " << std::endl;
+		std::cout << "overlap success  " << this->_overlap_success_frame << "  frames " << std::endl;
 
 		/***********************save the result rect and overlap data**************************/
 		/*		std::cout << "current _frameIdx is " << _frameIdx << std::endl;
@@ -341,7 +341,7 @@ bool TrackerRun::update()
 
 		imshow(_windowTitle.c_str(), hudImage);
 
-		waitKey(3);
+		waitKey(0);
 		++_frameIdx;
 		/*		stringstream stream;
 		 stream << "train_detect" << _frameIdx<<".jpg";
