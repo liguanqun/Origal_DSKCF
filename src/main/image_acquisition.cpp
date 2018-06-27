@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "json/json.h"
 ImageAcquisition::ImageAcquisition()
-	{ ///home/liguanqun/Downloads/data/ValidationSet/bear_front
+	{
 //遮挡物特别大，遮挡之后的恢复问题
 //cc_occ1  express1_occ express2_occ  new_ex_occ1 new_ex_occ3  rose1.2"
 		_rgb_FrameID = 1;
@@ -99,7 +99,7 @@ void ImageAcquisition::Init()
 			}
 
 		_size = std::min(_FrameID_path_depth.size(), _FrameID_path.size());
-		std::cout << "total image is " << _size << std::endl;
+
 
 		/**********读frames.json******************/
 		std::string path_JSON = _path + "/frames.json";
@@ -118,15 +118,12 @@ void ImageAcquisition::Init()
 
 		if (reader.parse(in, root))
 			{
-				_size = std::min(_size, (int) root["imageFrameID"].size());
 
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
 						int ach = root["depthFrameID"][i].asInt();
 						_RGB_DEPTH_ID[i + 1] = ach;
-
 					}
-
 			}
 		else
 			{
@@ -139,6 +136,23 @@ void ImageAcquisition::Init()
 		std::cout << "current image set is  " << name << std::endl;
 		_name = name;
 		path = _path + "/" + name + ".txt";
+
+		//以groundtruth的行数为图片数量的依据
+		ifstream file(path.c_str());
+		if (!file.is_open())
+			{
+				cout << "can not open the init file" << endl;
+			}
+
+		string tmp;
+		int Rcet_ID_num = 0;
+		while (getline(file, tmp))
+			{
+				Rcet_ID_num++;
+			}
+		_size =std::min(Rcet_ID_num,_size);
+		file.close();
+
 
 		ifstream myfile(path.c_str());
 		if (!myfile.is_open())
@@ -185,19 +199,13 @@ void ImageAcquisition::Init()
 				Rcet_ID++;
 
 			}
-
-		myfile.close();   //关闭文件
+		std::cout << "total image is " << _size << std::endl;
+		myfile.close(); //关闭文件
 	}
 cv::Mat ImageAcquisition::Get_first_RGB()
 	{
 		cv::Mat image = cv::imread(_FrameID_path[_rgb_FrameID]);
-		_rgb_FrameID ++;
-		return image;
-
-	}
-cv::Mat ImageAcquisition::Get_init_RGB()
-	{
-		cv::Mat image = cv::imread(_FrameID_path[_rgb_FrameID]);
+		_rgb_FrameID++;
 		return image;
 
 	}
@@ -220,18 +228,20 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 
 cv::Rect ImageAcquisition::Get_Current_GroundTruth_Rect(void)
 	{
-		cv::Rect r = _FrameID_rect[_rgb_FrameID-1];
+		cv::Rect r = _FrameID_rect[_rgb_FrameID - 1];
 		return r;
 	}
 
 cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB()
 	{
-		int ask = _RGB_DEPTH_ID[_rgb_FrameID-1];
+		int ask = _RGB_DEPTH_ID[_rgb_FrameID - 1];
 		cv::Mat depth;
 		if (ask <= _size)
 			{
+
 				depth = cv::imread(_FrameID_path_depth[ask], CV_LOAD_IMAGE_ANYDEPTH);
 				depth = Shift_Bit_Depth_Image(depth);
+
 			}
 		else
 			{
