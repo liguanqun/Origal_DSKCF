@@ -38,6 +38,7 @@ private:
     bool update();
 
     float Overlap(const cv::Rect_<double>& boundBox,const cv::Rect_<double>& groundtruth, bool targetOnFrame);
+    double distance_err(const cv::Rect_<double>& boundBox, const cv::Rect_<double>& groundtruth, bool targetOnFrame);
 private:
     std::array< cv::Mat, 2 > _image;
     CfTracker* _tracker;
