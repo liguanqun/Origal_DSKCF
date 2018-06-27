@@ -199,7 +199,7 @@ cv::Mat ImageAcquisition::Get_first_RGB()
 cv::Mat ImageAcquisition::Get_Next_RGB()
 {
 	cv::Mat image;
-	if (_rgb_FrameID < _size)
+	if (_rgb_FrameID <= _size)
 	{
 		image = cv::imread(_FrameID_path[_rgb_FrameID]);
 		_rgb_FrameID++;
@@ -223,7 +223,7 @@ cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB()
 {
 	int ask = _RGB_DEPTH_ID[_rgb_FrameID-1];
 	cv::Mat depth;
-	if (ask < _size)
+	if (ask <= _size)
 	{
 
 		depth = cv::imread(_FrameID_path_depth[ask], CV_LOAD_IMAGE_ANYDEPTH);
