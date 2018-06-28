@@ -19,6 +19,8 @@ using namespace std;
 using namespace cv;
 void read_data(std::string path, std::vector<double>& data_save, int fixed_precisious);
 void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, int longth, int step, int threshold, cv::Scalar scalar, cv::Scalar scalar_a, bool flag);
+void plot_distance_err_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a);
+void plot_overlap_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a);
 int main(int argc, const char** argv)
 	{
 
@@ -28,23 +30,27 @@ int main(int argc, const char** argv)
 				std::vector<double> weight_distance_err, distance_err;
 				std::vector<double> weight_overlap, overlap;
 
-				std::string path = "weight_"+name+"_distance_err.txt";
+				std::string path = "weight_" + name + "_distance_err.txt";
 				read_data(path, weight_distance_err, 1);
 
-				path = "weight_"+name+"_overlap.txt";
+				path = "weight_" + name + "_overlap.txt";
 				read_data(path, weight_overlap, 5);
 
-				path = name+"_distance_err.txt";
+				path = name + "_distance_err.txt";
 				read_data(path, distance_err, 1);
 
-				path = name+"_overlap.txt";
+				path = name + "_overlap.txt";
 				read_data(path, overlap, 5);
 
-				cv::namedWindow("distance_err", 0);
-				cv::namedWindow("overlap", 0);
-				plot_cruve(weight_distance_err, distance_err, "distance_err", 50, 1, 20, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), true);
-				plot_cruve(weight_overlap, overlap, "overlap", 100, 100, 50, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), false);
+				cv::namedWindow("distance_err_rate", 0);
+				cv::namedWindow("overlap_rate", 0);
+				plot_cruve(weight_distance_err, distance_err, "distance_err_rate", 50, 1, 20, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), true);
+				plot_cruve(weight_overlap, overlap, "overlap_rate", 100, 100, 50, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), false);
 
+				cv::namedWindow("distance", 0);
+				cv::namedWindow("overlap", 0);
+				plot_distance_err_cruve(weight_distance_err, distance_err, "distance", cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0));
+				plot_overlap_cruve(weight_overlap, overlap, "overlap", cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0));
 				cv::waitKey(0);
 			}
 
@@ -150,5 +156,89 @@ void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string
 				cv::Point p2 = cv::Point((threshold - 1) * 3, hist_picture.rows);
 				cv::line(hist_picture, p1, p2, scalar, 1);
 				cv::imshow(windoe_title, hist_picture);
+			}
+	}
+void plot_overlap_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a)
+	{
+		if (data.size() == data1.size())
+			{
+				cv::Mat hist_picture_overlap(600, data.size() * 3, CV_8UC3, cv::Scalar(255, 255, 255));
+				cv::Point p5 = cv::Point(0, hist_picture_overlap.rows - 50 * 6);
+				cv::Point p6 = cv::Point(data.size() * 3 - 1, hist_picture_overlap.rows - 50 * 6);
+				cv::line(hist_picture_overlap, p5, p6, cv::Scalar(0, 0, 255), 1);
+				for (int i = 1; i < data.size(); i++)
+					{
+						cv::Point p1 = cv::Point((i - 1) * 3, hist_picture_overlap.rows - data[i - 1] * 100 * 6);
+						cv::Point p2 = cv::Point(i * 3, hist_picture_overlap.rows - data[i] * 100 * 6);
+						cv::line(hist_picture_overlap, p1, p2, scalar, 1);
+						cv::Point p3 = cv::Point((i - 1) * 3, hist_picture_overlap.rows - data1[i - 1] * 100 * 6);
+						cv::Point p4 = cv::Point(i * 3, hist_picture_overlap.rows - data1[i] * 100 * 6);
+						cv::line(hist_picture_overlap, p3, p4, scalar_a, 1);
+					}
+				for (int i = 9; i < data.size(); i++)
+					{
+						if ((i + 1) % 10 == 0)
+							{
+								cv::Point p1 = cv::Point(i * 3, 0);
+								cv::Point p2 = cv::Point(i * 3, 10);
+								cv::line(hist_picture_overlap, p1, p2, cv::Scalar(0, 0, 255), 1);
+							}
+						if ((i + 1) % 50 == 0)
+							{
+								cv::Point p1 = cv::Point(i * 3, 0);
+								cv::Point p2 = cv::Point(i * 3, 15);
+								cv::line(hist_picture_overlap, p1, p2, cv::Scalar(0, 0, 255), 1);
+							}
+					}
+
+				cv::imshow(windoe_title, hist_picture_overlap);
+			}
+		else
+			{
+				std::cout << "data isn't the same size " << std::endl;
+			}
+	}
+
+void plot_distance_err_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a)
+	{
+		if (data.size() == data1.size())
+			{
+				cv::Mat hist_picture(600, data.size() * 3, CV_8UC3, cv::Scalar(255, 255, 255));
+
+				cv::Point p3 = cv::Point(0, hist_picture.rows - 20 * 6);
+				cv::Point p4 = cv::Point(data.size() * 3 - 1, hist_picture.rows - 20 * 6);
+				cv::line(hist_picture, p3, p4, cv::Scalar(0, 0, 0), 1);
+
+				for (int i = 1; i < data.size(); i++)
+					{
+						cv::Point p1 = cv::Point((i - 1) * 3, hist_picture.rows - data[i - 1] * 6);
+						cv::Point p2 = cv::Point(i * 3, hist_picture.rows - data[i] * 6);
+						cv::line(hist_picture, p1, p2, scalar, 1);
+						cv::Point p4 = cv::Point((i - 1) * 3, hist_picture.rows - data1[i - 1] * 6);
+						cv::Point p5 = cv::Point(i * 3, hist_picture.rows - data1[i] * 6);
+						cv::line(hist_picture, p4, p5, scalar_a, 1);
+					}
+
+				for (int i = 9; i < data.size(); i++)
+					{
+						if ((i + 1) % 10 == 0)
+							{
+								cv::Point p1 = cv::Point(i * 3, hist_picture.rows);
+								cv::Point p2 = cv::Point(i * 3, hist_picture.rows - 10);
+								cv::line(hist_picture, p1, p2, cv::Scalar(0, 0, 255), 1);
+							}
+						if ((i + 1) % 50 == 0)
+							{
+								cv::Point p1 = cv::Point(i * 3, hist_picture.rows);
+								cv::Point p2 = cv::Point(i * 3, hist_picture.rows - 15);
+								cv::line(hist_picture, p1, p2, cv::Scalar(0, 0, 255), 1);
+							}
+					}
+				//cv::namedWindow("distance success", 0);
+				cv::imshow(windoe_title, hist_picture);
+			}
+		else
+			{
+				std::cout << "data isn't the same size " << std::endl;
 			}
 	}
