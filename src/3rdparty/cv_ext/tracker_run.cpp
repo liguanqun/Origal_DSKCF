@@ -14,7 +14,7 @@ using namespace cv;
 using namespace std;
 using namespace TCLAP;
 
-#define SCALE 2
+#define SCALE 1
 
 TrackerRun::TrackerRun(string windowTitle)
 	{

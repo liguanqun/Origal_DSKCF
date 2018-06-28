@@ -322,6 +322,10 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 						FC::mulFeatures( features[ index ], this->m_cosineWindow );
 						FC::mulFeatures( features[ index ], this->m_weight );
 					});
+				cv::Mat weight_cosine =this->m_weight.mul(this->m_cosineWindow);
+				cv::namedWindow("weight_cosine",0);
+				cv::imshow("weight_cosine",weight_cosine);
+
 			}
 		else
 			{

@@ -43,9 +43,9 @@ int main(int argc, const char** argv)
 				path = name1 + "_overlap.txt";
 				read_data(path, overlap, 5);
 
-				cv::namedWindow("distance_err_rate", 0);
+				cv::namedWindow("distance_success_rate", 0);
 				cv::namedWindow("overlap_rate", 0);
-				plot_cruve(weight_distance_err, distance_err, "distance_err_rate", 50, 1, 20, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), true);
+				plot_cruve(weight_distance_err, distance_err, "distance_success_rate", 50, 1, 20, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), true);
 				plot_cruve(weight_overlap, overlap, "overlap_rate", 100, 100, 50, cv::Scalar(255, 0, 0), cv::Scalar(0, 255, 0), false);
 
 				cv::namedWindow("distance", 0);
@@ -82,6 +82,7 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 				distance_err_tmp = atof(tmp.substr(0, tmp.find_first_of(",")).c_str());
 				//	std::cout << distance_err_tmp << "   ";
 				data_save.push_back(distance_err_tmp);
+				if(data_save.size()>150)break;
 				tmp.erase(0, tmp.find_first_of(",") + 1);
 			}
 		//	std::cout << std::endl;
