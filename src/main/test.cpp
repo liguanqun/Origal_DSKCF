@@ -24,22 +24,23 @@ void plot_overlap_cruve(std::vector<double> data, std::vector<double> data1, std
 int main(int argc, const char** argv)
 	{
 
-		if (argc == 2)
+		if (argc == 3)
 			{
 				string name = argv[1];
+				string name1 = argv[2];
 				std::vector<double> weight_distance_err, distance_err;
 				std::vector<double> weight_overlap, overlap;
 
-				std::string path = "weight_" + name + "_distance_err.txt";
+				std::string path = name + "_distance_err.txt";
 				read_data(path, weight_distance_err, 1);
 
-				path = "weight_" + name + "_overlap.txt";
+				path = name + "_overlap.txt";
 				read_data(path, weight_overlap, 5);
 
-				path = name + "_distance_err.txt";
+				path = name1 + "_distance_err.txt";
 				read_data(path, distance_err, 1);
 
-				path = name + "_overlap.txt";
+				path = name1 + "_overlap.txt";
 				read_data(path, overlap, 5);
 
 				cv::namedWindow("distance_err_rate", 0);
@@ -65,6 +66,7 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 		if (!myfile.is_open())
 			{
 				cout << "can not open the init file from the path:" << path << endl;
+
 			}
 
 		string tmp;
@@ -156,6 +158,10 @@ void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string
 				cv::Point p2 = cv::Point((threshold - 1) * 3, hist_picture.rows);
 				cv::line(hist_picture, p1, p2, scalar, 1);
 				cv::imshow(windoe_title, hist_picture);
+			}
+		else
+			{
+				std::cout << "data isn't the same size " << std::endl;
 			}
 	}
 void plot_overlap_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a)

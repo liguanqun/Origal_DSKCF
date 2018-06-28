@@ -82,7 +82,7 @@ public:
    * @param featureExtractor A non-owning reference to the feature extractor to be used by this tracker.
    * @warning None of these parameters should be null.
    */
-  OcclusionHandler( KcfParameters paras, std::shared_ptr< Kernel > & kernel, std::shared_ptr< FeatureExtractor > & featureExtractor, std::shared_ptr< FeatureChannelProcessor > & featureProcessor );
+  OcclusionHandler( KcfParameters paras, std::shared_ptr< Kernel > & kernel, std::shared_ptr< FeatureExtractor > & featureExtractor, std::shared_ptr< FeatureChannelProcessor > & featureProcessor,double mul);
   virtual ~OcclusionHandler();
 
   /**
@@ -137,6 +137,7 @@ private:
 
   cv::Mat m_weight;
   double m_weight_mul;
+
 
   double m_lambdaOcc;
   double m_lambdaR1;

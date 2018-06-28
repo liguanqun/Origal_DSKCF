@@ -3,7 +3,7 @@
 #include <tbb/concurrent_vector.h>
 
 OcclusionHandler::OcclusionHandler(KcfParameters paras, std::shared_ptr<Kernel> & kernel, std::shared_ptr<FeatureExtractor> & featureExtractor,
-		std::shared_ptr<FeatureChannelProcessor> & featureProcessor)
+		std::shared_ptr<FeatureChannelProcessor> & featureProcessor, double mul)
 	{
 		this->m_paras = paras;
 		this->m_kernel = kernel;
@@ -26,7 +26,7 @@ OcclusionHandler::OcclusionHandler(KcfParameters paras, std::shared_ptr<Kernel> 
 
 		this->singleFrameProTime = std::vector<int64>(8, 0);
 
-		this->m_weight_mul =1;
+		this->m_weight_mul = mul;
 	}
 
 OcclusionHandler::~OcclusionHandler()
@@ -49,72 +49,81 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 
 		Point position = centerPoint(target);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
-		int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
-		int right_x = this->m_windowSize.width - left_x - 1;
-		int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
-		int down_y = this->m_windowSize.height - top_y - 1;
 
-		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
-		//	std::cout << "weight mat is " << weight_pre << std::endl;
-		cv::Mat weight_for_show = frame[0].clone();
-		cv::Mat weight_for_show_b = frame[0].clone();
-		//	std::cout << "this->m_depthSegmenter->_ObjectMask == " << std::endl << this->m_depthSegmenter->_ObjectMask << std::endl;
-		for (int y = 0; y < weight_pre.rows; y++)
+		if (this->m_weight_mul != 0)
 			{
-				for (int x = 0; x < weight_pre.cols; x++)
+				int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
+				int right_x = this->m_windowSize.width - left_x - 1;
+				int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
+				int down_y = this->m_windowSize.height - top_y - 1;
+
+				cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
+				//	std::cout << "weight mat is " << weight_pre << std::endl;
+				cv::Mat weight_for_show = frame[0].clone();
+				cv::Mat weight_for_show_b = frame[0].clone();
+				//	std::cout << "this->m_depthSegmenter->_ObjectMask == " << std::endl << this->m_depthSegmenter->_ObjectMask << std::endl;
+				for (int y = 0; y < weight_pre.rows; y++)
 					{
-						if (x >= left_x && x < right_x && y >= top_y && y < down_y)
+						for (int x = 0; x < weight_pre.cols; x++)
 							{
-								weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
-							}
-						if (weight_pre.at<double>(y, x) > 0)
-							{
-								// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
-								weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
-							}
-					}
-			}
-		cv::namedWindow("weight_for_show", 0);
-		cv::imshow("weight_for_show", weight_for_show);
-		//
-		int cell_width = this->m_cosineWindow.cols;
-		int cell_height = this->m_cosineWindow.rows;
-		cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
-		for (int cell_y = 0; cell_y < cell_height; cell_y++)
-			{
-				for (int cell_x = 0; cell_x < cell_width; cell_x++)
-					{
-						for (int i = 0; i < 4; i++)
-							{
-								for (int j = 0; j < 4; j++)
+								if (x >= left_x && x < right_x && y >= top_y && y < down_y)
 									{
-										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
+										weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
+									}
+								if (weight_pre.at<double>(y, x) > 0)
+									{
+										// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
+										weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
 									}
 							}
-						if (weight.at<double>(cell_y, cell_x) > 1)
+					}
+				cv::namedWindow("weight_for_show", 0);
+				cv::imshow("weight_for_show", weight_for_show);
+				//
+				int cell_width = this->m_cosineWindow.cols;
+				int cell_height = this->m_cosineWindow.rows;
+				cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
+				for (int cell_y = 0; cell_y < cell_height; cell_y++)
+					{
+						for (int cell_x = 0; cell_x < cell_width; cell_x++)
 							{
-								// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
-								weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
-							}
+								for (int i = 0; i < 4; i++)
+									{
+										for (int j = 0; j < 4; j++)
+											{
+												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) * m_weight_mul;
+											}
+									}
+								if (weight.at<double>(cell_y, cell_x) > 1)
+									{
+										// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
+										weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
+									}
 
+							}
+					}
+
+				this->m_weight.setTo(0);
+				this->m_weight = weight;
+
+				//Extract features
+				for (int i = 0; i < 2; i++)
+					{
+						features[i] = this->m_featureExtractor->getFeatures(frame[i], window);
+						FC::mulFeatures(features[i], this->m_cosineWindow);
+						FC::mulFeatures(features[i], this->m_weight);
 					}
 			}
-		//cv::namedWindow("weight_for_show_b", 0);
-	//	cv::imshow("weight_for_show_b", weight_for_show_b);
-
-		this->m_weight.setTo(0);
-		this->m_weight = weight;
-
-/*		std::cout<<"weight == "<<std::endl<<this->m_weight<<std::endl;
-		cv::namedWindow("weight",0);
-		cv::imshow("weight",this->m_weight);*/
-	//	std::cout << "the mat of weight is " << std::endl << weight_pre << std::endl;
-		//Extract features
-		for (int i = 0; i < 2; i++)
+		else
 			{
-				features[i] = this->m_featureExtractor->getFeatures(frame[i], window);
-				FC::mulFeatures(features[i], this->m_cosineWindow);
-				FC::mulFeatures(features[i], this->m_weight);
+				//Extract features
+				for (int i = 0; i < 2; i++)
+					{
+						features[i] = this->m_featureExtractor->getFeatures(frame[i], window);
+						FC::mulFeatures(features[i], this->m_cosineWindow);
+
+					}
+
 			}
 
 		features = this->m_featureProcessor->concatenate(features);
@@ -166,7 +175,10 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
-				FC::mulFeatures( features[ index ], this->m_weight );
+				if(this->m_weight_mul!=0)
+					{
+						FC::mulFeatures( features[ index ], this->m_weight );
+					}
 			});
 
 		features = this->m_featureProcessor->concatenate(features);
@@ -178,103 +190,15 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				positions.push_back(result.position);
 				responses.push_back(result.maxResponse);
 			}
-
 		//here the maximun response is calculated....
 		int64 tStopDetection = cv::getTickCount();
 		this->singleFrameProTime[0] = tStopDetection - tStartDetection;
 
 		int64 tStartSegment = tStopDetection;
-
 		//TO BE CHECKED IN CASE OF MULTIPLE MODELS...LINEAR ETC....WORKS ONLY FOR SINGLE (or concatenate) features
 		target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
 		int bin = this->m_depthSegmenter->update(frame[1], target);
-////////////////////////////////////////////////////////////////////////////////////////
-		//根据最新预测的位置扩展 window 的位置
 
-/*		window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
-				int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
-				int right_x = this->m_windowSize.width - left_x - 1;
-				int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
-				int down_y = this->m_windowSize.height - top_y - 1;
-				cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
-				cv::Mat weight_for_show = frame[0].clone();
-				cv::Mat weight_for_show_b = frame[0].clone();
-				int cell_width = this->m_cosineWindow.cols;
-				int cell_height = this->m_cosineWindow.rows;
-				cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
-
-				for (int y = 0; y < weight_pre.rows; y++)
-					{
-						for (int x = 0; x < weight_pre.cols; x++)
-							{
-								if (x >= left_x && x < right_x && y >= top_y && y <down_y)
-									{
-										weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
-									}
-
-								if (weight_pre.at<double>(y, x) > 0)
-									{
-										weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
-									}
-
-
-							}
-					}
-
-				cv::namedWindow("weight_for_show", 0);
-				cv::imshow("weight_for_show", weight_for_show);
-
-				for (int cell_y = 0; cell_y < cell_height; cell_y++)
-					{
-						for (int cell_x = 0; cell_x < cell_width; cell_x++)
-							{
-								for (int i = 0; i < 4; i++)
-									{
-										for (int j = 0; j < 4; j++)
-											{
-												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
-											}
-									}
-								if (weight.at<double>(cell_y, cell_x) > 1)
-									{
-										// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
-										weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
-									}
-							}
-					}
-				//cv::namedWindow("weight_for_show_b", 0);
-				//cv::imshow("weight_for_show_b", weight_for_show_b);
-
-				this->m_weight.setTo(0);
-				this->m_weight = weight;
-
-
-				//重新检测一次
-
-				std::vector<std::shared_ptr<FC> > features_second(2);
-
-		      //  target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
-			    window = boundingBoxFromPointSize(positions.back(), this->m_windowSize);
-			    cv::Point position_new = positions.back();
-			    positions.clear();
-				tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features_second,&window]( uint index ) -> void
-					{
-						features_second[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
-						FC::mulFeatures( features_second[ index ], this->m_cosineWindow );
-						FC::mulFeatures( features_second[ index ], this->m_weight );
-					});
-				features_second = this->m_featureProcessor->concatenate(features_second);
-				std::vector<cv::Mat> frames_second = this->m_featureProcessor->concatenate(std::vector<cv::Mat>(frame.begin(), frame.end()));
-				for (uint i = 0; i < features.size(); i++)
-					{
-						DetectResult result = this->m_targetTracker[i]->detect(frames_second[i], features_second[i], position_new, this->m_depthSegmenter->getTargetDepth(), this->m_depthSegmenter->getTargetSTD());
-						positions.push_back(result.position);
-						//responses.push_back(result.maxResponse);
-					}
-				target = boundingBoxFromPointSize(positions.back(), this->m_targetSize);
-				 bin = this->m_depthSegmenter->update(frame[1], target);*/
-
-////////////////////////////////////////////////////////////////////////////////////////
 		DepthHistogram histogram = this->m_depthSegmenter->getHistogram();
 
 		double totalArea = target.area() * 1.05;
@@ -312,7 +236,6 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				estimate.y = (estimate.y - this->m_targetSize.height / 2) < frame[0].rows ? estimate.y : this->m_targetSize.height;
 				estimate.x = (estimate.x + this->m_targetSize.width / 2) > 0 ? estimate.x : 1;
 				estimate.y = (estimate.y + this->m_targetSize.height / 2) > 0 ? estimate.y : 1;
-				//获取了 尺度系数
 				return boundingBoxFromPointSize(estimate, this->m_initialSize * this->m_scaleAnalyser->getScaleFactor());
 
 			}
@@ -325,80 +248,91 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 		std::vector<std::shared_ptr<FC> > features(2);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
 
-		//根据深度分割得到的目标深度， 更新了目标的大小，即更新了尺度
 		this->m_scaleAnalyser->update(frame[1], window);
 
 		int64 tStopScaleCheck = cv::getTickCount();
 		this->singleFrameProTime[5] = tStopScaleCheck - tStartScaleCheck;
 
 		int64 tStartModelUpdate = tStopScaleCheck;
-
-		//根据最新预测的位置扩展 window 的位置
 		window = boundingBoxFromPointSize(position, this->m_windowSize);
-		int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
-		int right_x = this->m_windowSize.width - left_x - 1;
-		int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
-		int down_y = this->m_windowSize.height - top_y - 1;
-		cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
-		cv::Mat weight_for_show = frame[0].clone();
-		cv::Mat weight_for_show_b = frame[0].clone();
-		int cell_width = this->m_cosineWindow.cols;
-		int cell_height = this->m_cosineWindow.rows;
-		cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
 
-		for (int y = 0; y < weight_pre.rows; y++)
+		if (this->m_weight_mul != 0)
 			{
-				for (int x = 0; x < weight_pre.cols; x++)
+				//根据最新预测的位置扩展 window 的位置
+				int left_x = cvFloor((this->m_windowSize.width - this->m_depthSegmenter->_ObjectMask.cols) / 2);
+				int right_x = this->m_windowSize.width - left_x - 1;
+				int top_y = cvFloor((this->m_windowSize.height - this->m_depthSegmenter->_ObjectMask.rows) / 2);
+				int down_y = this->m_windowSize.height - top_y - 1;
+				cv::Mat weight_pre((int) this->m_windowSize.height, (int) this->m_windowSize.width, this->m_cosineWindow.type(), cv::Scalar::all(0));
+				cv::Mat weight_for_show = frame[0].clone();
+				cv::Mat weight_for_show_b = frame[0].clone();
+				int cell_width = this->m_cosineWindow.cols;
+				int cell_height = this->m_cosineWindow.rows;
+				cv::Mat weight(cell_height, cell_width, this->m_cosineWindow.type(), cv::Scalar::all(1));
+
+				for (int y = 0; y < weight_pre.rows; y++)
 					{
-						if (x >= left_x && x < right_x && y >= top_y && y <down_y)
+						for (int x = 0; x < weight_pre.cols; x++)
 							{
-								weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
-							}
-
-						if (weight_pre.at<double>(y, x) > 0)
-							{
-								weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
-							}
-
-
-					}
-			}
-
-		cv::namedWindow("weight_for_show", 0);
-		cv::imshow("weight_for_show", weight_for_show);
-
-		for (int cell_y = 0; cell_y < cell_height; cell_y++)
-			{
-				for (int cell_x = 0; cell_x < cell_width; cell_x++)
-					{
-						for (int i = 0; i < 4; i++)
-							{
-								for (int j = 0; j < 4; j++)
+								if (x >= left_x && x < right_x && y >= top_y && y < down_y)
 									{
-										weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) *m_weight_mul;
+										weight_pre.at<double>(y, x) = (double) this->m_depthSegmenter->_ObjectMask(y - top_y, x - left_x);
+									}
+
+								if (weight_pre.at<double>(y, x) > 0)
+									{
+										weight_for_show.at<cv::Vec3b>(window.y + y, window.x + x)[2] = 255;
+									}
+
+							}
+					}
+
+				cv::namedWindow("weight_for_show", 0);
+				cv::imshow("weight_for_show", weight_for_show);
+
+				for (int cell_y = 0; cell_y < cell_height; cell_y++)
+					{
+						for (int cell_x = 0; cell_x < cell_width; cell_x++)
+							{
+								for (int i = 0; i < 4; i++)
+									{
+										for (int j = 0; j < 4; j++)
+											{
+												weight.at<double>(cell_y, cell_x) += weight_pre.at<double>(cell_y * 4 + i, cell_x * 4 + j) * m_weight_mul;
+											}
+									}
+								if (weight.at<double>(cell_y, cell_x) > 1)
+									{
+										// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
+										weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
 									}
 							}
-						if (weight.at<double>(cell_y, cell_x) > 1)
-							{
-								// cv::Point p = cv::Point(window.y+4*cell_y+1,window.x+4*cell_y+1);
-								weight_for_show_b.at<cv::Vec3b>(window.y + cell_y * 4 + 3, window.x + cell_x * 4 + 3)[2] = 255;
-							}
 					}
-			}
-		//cv::namedWindow("weight_for_show_b", 0);
-		//cv::imshow("weight_for_show_b", weight_for_show_b);
+				//cv::namedWindow("weight_for_show_b", 0);
+				//cv::imshow("weight_for_show_b", weight_for_show_b);
 
-		this->m_weight.setTo(0);
-		this->m_weight = weight;
-/*        std::cout<<"weight == "<<std::endl<<this->m_weight<<std::endl;
-		cv::namedWindow("weight",0);
-		cv::imshow("weight",this->m_weight);*/
-		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+				this->m_weight.setTo(0);
+				this->m_weight = weight;
+				/*        std::cout<<"weight == "<<std::endl<<this->m_weight<<std::endl;
+				 cv::namedWindow("weight",0);
+				 cv::imshow("weight",this->m_weight);*/
+				tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+					{
+						features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
+						FC::mulFeatures( features[ index ], this->m_cosineWindow );
+						FC::mulFeatures( features[ index ], this->m_weight );
+					});
+			}
+		else
 			{
-				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
-				FC::mulFeatures( features[ index ], this->m_cosineWindow );
-				FC::mulFeatures( features[ index ], this->m_weight );
-			});
+				tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+					{
+						features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
+						FC::mulFeatures( features[ index ], this->m_cosineWindow );
+					});
+
+			}
+
 
 		features = this->m_featureProcessor->concatenate(features);
 
@@ -685,7 +619,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < (uint) objectBin)
+				if (i < objectBin)
 					{
 						occluderArea += histogram[i];
 					}
@@ -703,7 +637,7 @@ double OcclusionHandler::phi(const DepthHistogram & histogram, const int objectB
 
 		for (uint i = 0; i < histogram.size(); i++)
 			{
-				if (i < (uint) objectBin)
+				if (i < objectBin)
 					{
 						occluderArea += histogram[i];
 					}

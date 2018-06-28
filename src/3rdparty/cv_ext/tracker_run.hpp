@@ -52,6 +52,7 @@ private:
     std::vector<cv::Rect_<double>> _rect_result;
     std::vector<float> _OVERLAP;
 
+    double _mul;
 
     cv::Rect_<double> _boundingBox;
      ImageAcquisition  _cap;

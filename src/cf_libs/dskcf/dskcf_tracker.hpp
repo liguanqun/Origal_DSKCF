@@ -25,7 +25,7 @@
 class DskcfTracker: public CfTracker
 	{
 	public:
-		DskcfTracker();
+		DskcfTracker(double mul);
 		virtual ~DskcfTracker();
 		virtual bool update(const std::array<cv::Mat, 2> & frame, cv::Rect_<double> & boundingBox);
 		virtual bool update(const std::array<cv::Mat, 2> & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector);
@@ -37,6 +37,7 @@ class DskcfTracker: public CfTracker
 
 	private:
 
+		double _mul;
 		/** The occlusion handler associated with this object */
 		std::shared_ptr<OcclusionHandler> m_occlusionHandler;
 	};

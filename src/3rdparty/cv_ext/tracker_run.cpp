@@ -47,7 +47,10 @@ TrackerRun::~TrackerRun()
 
 		/**************************************************************************/
 		ofstream outfile_distance_err;
-		std::string name ="weight_"+ _cap._name + "_distance_err.txt";
+		   char mul_str[256];
+		    sprintf(mul_str, "%.2f", this->_mul);
+		    string mul_result = mul_str;
+		std::string name ="weight_"+mul_result+"_"+ _cap._name + "_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
 		for (int j = 0; j < this->_center_err.size(); j++)
@@ -61,7 +64,7 @@ TrackerRun::~TrackerRun()
 
 ///*******************************************************************************/
 		ofstream outfile_overlap;
-		std::string name_overlap ="weight_"+ _cap._name + "_overlap.txt";
+		std::string name_overlap ="weight_"+mul_result+"_"+ _cap._name + "_overlap.txt";
 		outfile_overlap.open(name_overlap.c_str(), ios::app);
 		outfile_overlap.setf(ios::fixed);
 		for (int j = 0; j < this->_OVERLAP.size(); j++)
@@ -88,20 +91,19 @@ TrackerRun::~TrackerRun()
 
 bool TrackerRun::start(int argc, const char** argv)
 	{
-
-		this->_tracker = new DskcfTracker();
-
-		if (argc == 2)
+		if (argc == 3)
 			{
 				this->_cap._path = argv[1];
+				this->_mul = std::atof(argv[2]);
 			}
 		else
 			{
+				std::cout<<"there is not correct parametrs enter"<<std::endl;
 				return false;
 			}
+		this->_tracker = new DskcfTracker(this->_mul);
 		this->init();
-		while (this->run())
-			;
+		while (this->run());
 
 		return false;
 	}

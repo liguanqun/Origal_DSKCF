@@ -46,6 +46,7 @@
 class CfTracker
 {
 public:
+
   virtual ~CfTracker() {};
 
   /**

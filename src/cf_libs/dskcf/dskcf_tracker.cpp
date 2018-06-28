@@ -6,13 +6,14 @@
 
 typedef cv::Rect_< double > Rect;
 
-DskcfTracker::DskcfTracker()
+DskcfTracker::DskcfTracker(double mul)
 {
 	std::shared_ptr< Kernel > kernel = std::make_shared< GaussianKernel >();
 	std::shared_ptr< FeatureExtractor > features = std::make_shared< HOGFeatureExtractor >();
 	std::shared_ptr< FeatureChannelProcessor > processor = std::make_shared< ConcatenateFeatureChannelProcessor >();
+    this->_mul =mul;
+	this->m_occlusionHandler = std::make_shared< OcclusionHandler >(KcfParameters(), kernel, features, processor,mul);
 
-	this->m_occlusionHandler = std::make_shared< OcclusionHandler >(KcfParameters(), kernel, features, processor);
 }
 
 DskcfTracker::~DskcfTracker()
@@ -63,7 +64,7 @@ bool DskcfTracker::reinit(const std::array< cv::Mat, 2 > & frame, Rect & boundin
 	std::shared_ptr< FeatureExtractor > features = std::make_shared< HOGFeatureExtractor >();
 	std::shared_ptr< FeatureChannelProcessor > processor = std::make_shared< ConcatenateFeatureChannelProcessor >();
 
-	this->m_occlusionHandler = std::make_shared< OcclusionHandler >(KcfParameters(), kernel, features, processor);
+	this->m_occlusionHandler = std::make_shared< OcclusionHandler >(KcfParameters(), kernel, features, processor, this->_mul);
 
 	this->m_occlusionHandler->init(frame, boundingBox);
 
