@@ -134,6 +134,7 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 			}
 
 		this->m_filter.initialise(position);
+		this->point_predicted = position;
 	}
 
 const Rect OcclusionHandler::detect(const std::array<cv::Mat, 2> & frame, const Point & position)
@@ -171,7 +172,22 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		Rect target = boundingBoxFromPointSize(position, this->m_targetSize);
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
 
-		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+		/****************加入kalman滤波预测的位置**********************************/
+	    cv::Point_<double> point_predicted_by_kalman = this->m_filter.getPrediction();
+        this->point_predicted = point_predicted_by_kalman;
+        cv::Point_<double>point_delta = this->point_predicted -position;
+
+        std::cout<<"delta x y == "<<point_delta.x<<"  "<<point_delta.y<<std::endl;
+
+        if(point_delta.x>2 || point_delta.y>2)
+        	{
+        		// target = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_targetSize);
+        		// window = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_windowSize);
+        	}
+
+        /**********************************************************************/
+
+	     tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
@@ -190,6 +206,10 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				positions.push_back(result.position);
 				responses.push_back(result.maxResponse);
 			}
+
+		//kalamn滤波矫正
+		this->m_filter.getEstimate(positions.back());
+
 		//here the maximun response is calculated....
 		int64 tStopDetection = cv::getTickCount();
 		this->singleFrameProTime[0] = tStopDetection - tStartDetection;

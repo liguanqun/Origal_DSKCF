@@ -21,9 +21,9 @@ void KalmanFilter2D::initialise( const cv::Point_< double > & position )
   this->m_filter.statePost.at< double >( 1 ) = position.y;
   this->m_filter.statePost.at< double >( 2 ) = 0;
   this->m_filter.statePost.at< double >( 3 ) = 0;
-  cv::setIdentity( this->m_filter.measurementMatrix );
-  cv::setIdentity( this->m_filter.processNoiseCov, cv::Scalar::all( 1e-4 ) );
-  cv::setIdentity( this->m_filter.measurementNoiseCov, cv::Scalar::all( 1e-4 ) );
+  cv::setIdentity( this->m_filter.measurementMatrix );//测量矩阵 H
+  cv::setIdentity( this->m_filter.processNoiseCov, cv::Scalar::all( 1e-4 ) );//系统误差  Q
+  cv::setIdentity( this->m_filter.measurementNoiseCov, cv::Scalar::all( 1e-4 ) );//测量误差 R
   cv::setIdentity( this->m_filter.errorCovPost, cv::Scalar::all( 0.1 ) );
 }
 

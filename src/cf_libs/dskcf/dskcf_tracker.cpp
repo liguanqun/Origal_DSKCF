@@ -26,7 +26,9 @@ bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, Rect & boundin
 
 	boundingBox = (this->m_occlusionHandler->detect(frame, position));
 
-	position = centerPoint(boundingBox);
+    this->point_predicted =this->m_occlusionHandler->point_predicted;
+
+    position = centerPoint(boundingBox);
 
 	this->m_occlusionHandler->update(frame, position);
 
@@ -41,6 +43,8 @@ bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<doub
 	Point position = centerPoint(boundingBox);
 
 	boundingBox = (this->m_occlusionHandler->detect(frame, position));
+
+    this->point_predicted =this->m_occlusionHandler->point_predicted;
 
 	position = centerPoint(boundingBox);
 
@@ -68,6 +72,7 @@ bool DskcfTracker::reinit(const std::array< cv::Mat, 2 > & frame, Rect & boundin
 
 	this->m_occlusionHandler->init(frame, boundingBox);
 
+    this->point_predicted = centerPoint(boundingBox);
 	return true;
 }
 
@@ -80,3 +85,7 @@ const std::string DskcfTracker::getId()
 {
 	return "DSKCF";
 }
+ cv::Point_<double> DskcfTracker::get_predicted_point()
+	 {
+        return this->point_predicted;
+	 }

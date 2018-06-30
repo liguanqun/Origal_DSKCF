@@ -47,10 +47,10 @@ TrackerRun::~TrackerRun()
 
 		/**************************************************************************/
 		ofstream outfile_distance_err;
-		   char mul_str[256];
-		    sprintf(mul_str, "%.2f", this->_mul);
-		    string mul_result = mul_str;
-		std::string name ="weight_"+mul_result+"_"+ _cap._name + "_distance_err.txt";
+		char mul_str[256];
+		sprintf(mul_str, "%.2f", this->_mul);
+		string mul_result = mul_str;
+		std::string name = "weight_" + mul_result + "_1_" + _cap._name + "_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
 		for (int j = 0; j < this->_center_err.size(); j++)
@@ -64,7 +64,7 @@ TrackerRun::~TrackerRun()
 
 ///*******************************************************************************/
 		ofstream outfile_overlap;
-		std::string name_overlap ="weight_"+mul_result+"_"+ _cap._name + "_overlap.txt";
+		std::string name_overlap = "weight_" + mul_result + "_1_" + _cap._name + "_overlap.txt";
 		outfile_overlap.open(name_overlap.c_str(), ios::app);
 		outfile_overlap.setf(ios::fixed);
 		for (int j = 0; j < this->_OVERLAP.size(); j++)
@@ -98,12 +98,13 @@ bool TrackerRun::start(int argc, const char** argv)
 			}
 		else
 			{
-				std::cout<<"there is not correct parametrs enter"<<std::endl;
+				std::cout << "there is not correct parametrs enter" << std::endl;
 				return false;
 			}
 		this->_tracker = new DskcfTracker(this->_mul);
 		this->init();
-		while (this->run());
+		while (this->run())
+			;
 
 		return false;
 	}
@@ -232,6 +233,10 @@ bool TrackerRun::update()
 		center.y = _boundingBox.y + _boundingBox.height / 2;
 		circle(hudImage, center, 3, colour, 2);
 
+		cv::Point_<double> prdicted = this->_tracker->get_predicted_point() * SCALE;
+		std::cout<<"for show prdicted  "<<prdicted.x<<" * "<<prdicted.y<<std::endl;
+		circle(hudImage, prdicted, 3, cv::Scalar(0,0,255), 2);
+
 		//
 		cv::Rect Current_GroundTruth = _cap.Get_Current_GroundTruth_Rect();
 		rectangle(hudImage, Current_GroundTruth, Scalar(255, 0, 0), 2);
@@ -243,7 +248,7 @@ bool TrackerRun::update()
 		//计算重合率 和 移动距离
 		this->_rect_result.push_back(_boundingBox);
 		float overlap = this->Overlap(_boundingBox, Current_GroundTruth, _targetOnFrame);
-		double distance =this->distance_err(_boundingBox, Current_GroundTruth, _targetOnFrame);
+		double distance = this->distance_err(_boundingBox, Current_GroundTruth, _targetOnFrame);
 		this->_OVERLAP.push_back(overlap);
 		this->_center_err.push_back(distance);
 		this->_overlap_sum += overlap;
@@ -362,7 +367,7 @@ double TrackerRun::distance_err(const cv::Rect_<double>& boundBox, const cv::Rec
 				center_truth.x = groundtruth.x + groundtruth.width / 2;
 				center_truth.y = groundtruth.y + groundtruth.height / 2;
 
-				distance = std::abs(center.x -center_truth.x) +  std::abs(center.y -center_truth.y);
+				distance = std::abs(center.x - center_truth.x) + std::abs(center.y - center_truth.y);
 			}
 
 		return distance;

@@ -81,6 +81,9 @@ public:
 
   virtual TrackerDebug* getTrackerDebug() = 0;
   virtual const std::string getId() = 0;
+
+  virtual cv::Point_<double> get_predicted_point()=0;
+
 };
 
 #endif

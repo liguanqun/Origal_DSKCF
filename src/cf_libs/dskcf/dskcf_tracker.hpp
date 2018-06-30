@@ -33,11 +33,12 @@ class DskcfTracker: public CfTracker
 
 		virtual TrackerDebug* getTrackerDebug();
 		virtual const std::string getId();
-
+	    virtual cv::Point_<double> get_predicted_point();
 
 	private:
 
 		double _mul;
+		cv::Point_<double> point_predicted;
 		/** The occlusion handler associated with this object */
 		std::shared_ptr<OcclusionHandler> m_occlusionHandler;
 	};
