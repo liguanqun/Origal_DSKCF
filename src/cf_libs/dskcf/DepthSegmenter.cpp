@@ -27,7 +27,11 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 				cv::Scalar mean, stddev;
 
 				//Find and store the empty depth values to be excluded from the histogram
-				cv::Mat1b mask = createMask(front_depth);
+				//cv::Mat1b mask = createMask(front_depth);
+				//std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
+				this->_floor_rows=0;
+				cv::Mat1b mask = createMask_filter(front_depth,this->_floor_rows);
+                std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
 
 				//Create the histogram of depths in the region excluding the masked
 				this->m_histogram = DepthHistogram::createHistogram(50, front_depth, mask);
@@ -90,7 +94,11 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 				cv::Scalar mean, stddev;
 
 				//Find and store the empty depth values to be excluded from the histogram
-				cv::Mat1b mask = createMask(front_depth);
+				//cv::Mat1b mask = createMask(front_depth);
+			//	std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
+				this->_floor_rows=0;
+				cv::Mat1b mask = createMask_filter(front_depth,this->_floor_rows);
+                std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
 
 				//Create the histogram of depths in the region excluding the mask
 				this->m_histogram = DepthHistogram::createHistogram(cvFloor(modelNoise(this->m_targetDepth, this->m_targetSTD)), front_depth, mask);
@@ -180,8 +188,8 @@ const cv::Mat1b DepthSegmenter::createLabelImage(const cv::Mat1w & region, const
 				for (int y = 0; y < region.rows; y++)
 					{
 						double depth = static_cast<double>(region(y, x));
-
-						if (depth != 0.0)
+                        //添加mask的判断，被mask去掉的不再参加聚类
+						if (depth != 0.0 && mask(y,x)!=0)
 							{
 
 								int index = this->m_histogram.depthToBin(depth);

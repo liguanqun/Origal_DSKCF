@@ -37,6 +37,8 @@ bool plot_overlap_cruve(std::vector<std::vector<double>> data, std::string windo
 
 //读取ECO的估计矩形数据，生成距离差文件和重合度文件
 void ECO_data(string path_ECO, string path_groundtruth);
+
+
 int main(int argc, const char** argv)
 	{
 
@@ -240,8 +242,8 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 				distance_err_tmp = atof(tmp.substr(0, tmp.find_first_of(",")).c_str());
 				//	std::cout << distance_err_tmp << "   ";
 				data_save.push_back(distance_err_tmp);
-				if (data_save.size() > 150)
-					break;
+				//if (data_save.size() > 150)
+		//	break;
 				tmp.erase(0, tmp.find_first_of(",") + 1);
 			}
 		//	std::cout << std::endl;

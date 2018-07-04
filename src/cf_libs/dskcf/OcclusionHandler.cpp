@@ -173,21 +173,21 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		Rect window = boundingBoxFromPointSize(position, this->m_windowSize);
 
 		/****************加入kalman滤波预测的位置**********************************/
-	    cv::Point_<double> point_predicted_by_kalman = this->m_filter.getPrediction();
-        this->point_predicted = point_predicted_by_kalman;
-        cv::Point_<double>point_delta = this->point_predicted -position;
+		cv::Point_<double> point_predicted_by_kalman = this->m_filter.getPrediction();
+		this->point_predicted = point_predicted_by_kalman;
+		cv::Point_<double> point_delta = this->point_predicted - position;
 
-        std::cout<<"delta x y == "<<point_delta.x<<"  "<<point_delta.y<<std::endl;
+		std::cout << "delta x y == " << point_delta.x << "  " << point_delta.y << std::endl;
 
-        if(point_delta.x>2 || point_delta.y>2)
-        	{
-        		// target = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_targetSize);
-        		// window = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_windowSize);
-        	}
+		if (point_delta.x > 2 || point_delta.y > 2)
+			{
+				// target = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_targetSize);
+				// window = boundingBoxFromPointSize(point_predicted_by_kalman, this->m_windowSize);
+			}
 
-        /**********************************************************************/
+		/**********************************************************************/
 
-	     tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
+		tbb::parallel_for<uint>(0, 2, 1, [this,&frame,&features,&window]( uint index ) -> void
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
@@ -256,7 +256,12 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 				estimate.y = (estimate.y - this->m_targetSize.height / 2) < frame[0].rows ? estimate.y : this->m_targetSize.height;
 				estimate.x = (estimate.x + this->m_targetSize.width / 2) > 0 ? estimate.x : 1;
 				estimate.y = (estimate.y + this->m_targetSize.height / 2) > 0 ? estimate.y : 1;
-				return boundingBoxFromPointSize(estimate, this->m_initialSize * this->m_scaleAnalyser->getScaleFactor());
+
+				cv::Rect result;
+				result = boundingBoxFromPointSize(estimate, this->m_initialSize * this->m_scaleAnalyser->getScaleFactor());
+               //返回的矩形框减去地面的行数
+				result.height -= this->m_depthSegmenter->_floor_rows;
+				return result;
 
 			}
 	}
@@ -342,9 +347,9 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 						FC::mulFeatures( features[ index ], this->m_cosineWindow );
 						FC::mulFeatures( features[ index ], this->m_weight );
 					});
-				cv::Mat weight_cosine =this->m_weight.mul(this->m_cosineWindow);
-				cv::namedWindow("weight_cosine",0);
-				cv::imshow("weight_cosine",weight_cosine);
+				cv::Mat weight_cosine = this->m_weight.mul(this->m_cosineWindow);
+				cv::namedWindow("weight_cosine", 0);
+				cv::imshow("weight_cosine", weight_cosine);
 
 			}
 		else
@@ -356,7 +361,6 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 					});
 
 			}
-
 
 		features = this->m_featureProcessor->concatenate(features);
 

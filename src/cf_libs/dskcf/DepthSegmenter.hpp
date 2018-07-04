@@ -120,6 +120,8 @@ public:
 	cv::Mat1b _ObjectMask;
 	cv::Mat   _result;
 	cv::Rect  _segmente_rect;
+
+	int _floor_rows;
 private:
 	/** The mean of the target object's depth */
 	double m_targetDepth;

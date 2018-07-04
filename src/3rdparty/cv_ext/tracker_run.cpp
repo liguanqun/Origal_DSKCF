@@ -50,7 +50,7 @@ TrackerRun::~TrackerRun()
 		char mul_str[256];
 		sprintf(mul_str, "%.2f", this->_mul);
 		string mul_result = mul_str;
-		std::string name = "weight_" + mul_result + "_1_" + _cap._name + "_distance_err.txt";
+		std::string name = "floor1000_weight_" + mul_result + "_1_" + _cap._name + "_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
 		for (int j = 0; j < this->_center_err.size(); j++)
@@ -64,7 +64,7 @@ TrackerRun::~TrackerRun()
 
 ///*******************************************************************************/
 		ofstream outfile_overlap;
-		std::string name_overlap = "weight_" + mul_result + "_1_" + _cap._name + "_overlap.txt";
+		std::string name_overlap = "floor1000_weight_" + mul_result + "_1_" + _cap._name + "_overlap.txt";
 		outfile_overlap.open(name_overlap.c_str(), ios::app);
 		outfile_overlap.setf(ios::fixed);
 		for (int j = 0; j < this->_OVERLAP.size(); j++)
