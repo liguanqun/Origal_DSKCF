@@ -32,7 +32,7 @@ class ImageAcquisition
 
         cv::Rect Get_Init_Rect(void);
 
-        cv::Rect Get_Current_GroundTruth_Rect(void);
+
 
 
 		void Get_Time_And_K(std::string str, int & t, int & k);
@@ -44,7 +44,7 @@ class ImageAcquisition
 	private:
 
 		std::map<int, std::string> _FrameID_path, _FrameID_path_depth;
-		std::map<int, cv::Rect> _FrameID_rect;
+
 		std::map<int, int> _FrameID_t, _FrameID_t_depth;
 		std::map<int, int> _RGB_DEPTH_ID;
 		int  _rgb_FrameID;

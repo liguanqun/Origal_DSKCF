@@ -129,77 +129,9 @@ void ImageAcquisition::Init()
 			{
 				cout << "JSON file parse error\n" << endl;
 			}
-		/******************读groundtruth***************************/
 
-		std::string name, path;
-		name = _path.substr(_path.find_last_of('/') + 1, _path.size());
-		std::cout << "current image set is  " << name << std::endl;
-		_name = name;
-		path = _path + "/" + name + ".txt";
-
-		//以groundtruth的行数为图片数量的依据
-		ifstream file(path.c_str());
-		if (!file.is_open())
-			{
-				cout << "can not open the init file" << endl;
-			}
-
-		string tmp;
-		int Rcet_ID_num = 0;
-		while (getline(file, tmp))
-			{
-				Rcet_ID_num++;
-			}
-		_size = std::min(Rcet_ID_num, _size);
-		file.close();
-
-		ifstream myfile(path.c_str());
-		if (!myfile.is_open())
-			{
-				cout << "can not open the init file" << endl;
-			}
-
-		string temp;
-		int Rcet_ID = 1;
-		while (getline(myfile, temp))
-			{
-
-				cv::Rect r;
-				if (Rcet_ID > _size)
-					{
-						std::cout << "Read the groundtruth error,the size of groundtruth beyond the size of the set" << std::endl;
-					}
-				else if (temp.substr(0, temp.find_first_of(',')).c_str() == "NaN")
-					{
-						r.x = 0;
-						r.y = 0;
-						r.height = 0;
-						r.width = 0;
-						_FrameID_rect[Rcet_ID] = r;
-					}
-				else
-					{
-						r.x = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-						temp.erase(0, temp.find_first_of(',') + 1);
-
-						r.y = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-						temp.erase(0, temp.find_first_of(',') + 1);
-
-						r.width = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-						temp.erase(0, temp.find_first_of(',') + 1);
-
-						r.height = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
-						temp.erase(0, temp.find_first_of(',') + 1);
-
-						int k = atoi(temp.c_str());
-						_FrameID_rect[k] = r;
-					}
-
-				Rcet_ID++;
-
-			}
 		std::cout << "total image is " << _size << std::endl;
-		myfile.close(); //关闭文件
+
 	}
 cv::Mat ImageAcquisition::Get_first_RGB()
 	{
@@ -225,11 +157,6 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 
 	}
 
-cv::Rect ImageAcquisition::Get_Current_GroundTruth_Rect(void)
-	{
-		cv::Rect r = _FrameID_rect[_rgb_FrameID - 1];
-		return r;
-	}
 
 cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB(double & delta_t)
 	{
