@@ -301,7 +301,7 @@ const DepthHistogram DepthHistogram::createHistogram( const uint step, const cv:
   cv::calcHist( &region32f, 1, &channels, cv::Mat(), result.m_bins, 1, &histogramBinCount, hist_ranges );
 
   result.estimatedStep=( 1.0 / (float)result.size() ) * ( result.m_maximum - result.m_minimum );
-
+	std::cout<<"max  "<<result.m_maximum<<" min "<<result.m_minimum<<std::endl;
   return result;
 }
 

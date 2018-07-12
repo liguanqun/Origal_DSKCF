@@ -67,7 +67,7 @@ public:
    *
    * @returns True if the model was successfully updated, false otherwise.
    */
-  virtual bool update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector) = 0;
+  virtual bool update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector,double & mul) = 0;
 
   /**
    * Initialises the model using the the object located in the given bounding box.

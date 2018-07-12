@@ -9,7 +9,7 @@ OcclusionHandler::OcclusionHandler(KcfParameters paras, std::shared_ptr<Kernel> 
 		this->m_kernel = kernel;
 		this->m_featureExtractor = featureExtractor;
 		this->m_featureProcessor = featureProcessor;
-		this->m_depthSegmenter = std::make_shared<DepthSegmenter>();
+		this->m_depthSegmenter = std::make_shared<DepthSegmenter>(mul);
 		this->m_scaleAnalyser = std::make_shared < ScaleAnalyser > (this->m_depthSegmenter.get(), paras.padding);
 
 		for (int i = 0; i < 2; i++)
@@ -177,7 +177,7 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 		this->point_predicted = point_predicted_by_kalman;
 		cv::Point_<double> point_delta = this->point_predicted - position;
 
-		std::cout << "delta x y == " << point_delta.x << "  " << point_delta.y << std::endl;
+		//std::cout << "delta x y == " << point_delta.x << "  " << point_delta.y << std::endl;
 
 		if (point_delta.x > 2 || point_delta.y > 2)
 			{
@@ -259,8 +259,11 @@ const Rect OcclusionHandler::visibleDetect(const std::array<cv::Mat, 2> & frame,
 
 				cv::Rect result;
 				result = boundingBoxFromPointSize(estimate, this->m_initialSize * this->m_scaleAnalyser->getScaleFactor());
-               //返回的矩形框减去地面的行数
-				result.height -= this->m_depthSegmenter->_floor_rows;
+				//返回的矩形框减去地面的行数
+				if (this->m_weight_mul != 0)
+					{
+						result.height -= this->m_depthSegmenter->_floor_rows;
+					}
 				return result;
 
 			}
@@ -474,7 +477,7 @@ void OcclusionHandler::occludedUpdate(const std::array<cv::Mat, 2> & frame, cons
 		int64 newInterval = tStopTrackOccluder - tStartTrackOccluder;
 		this->singleFrameProTime[3] += newInterval;
 	}
-
+//找出搜索框
 const Rect OcclusionHandler::onOcclusion(const std::array<cv::Mat, 2> & frame, std::vector<std::shared_ptr<FC> > & features, const Rect & boundingBox)
 	{
 		this->m_isOccluded = true;
@@ -684,7 +687,7 @@ void OcclusionHandler::onScaleChange(const Size & targetSize, const Size & windo
 				this->m_cosineWindow = cosineWindow;
 			}
 	}
-
+//找出搜索框之后重新初始化一个新的 tracker 跟踪遮挡区域
 void OcclusionHandler::initialiseOccluder(const cv::Mat & frame, const Rect boundingBox)
 	{
 		cv::Mat2d yf;
@@ -732,6 +735,11 @@ ThreadResult OcclusionHandler::scoreCandidate(const std::array<cv::Mat, 2> & fra
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
+				if(this->m_weight_mul!=0)
+					{
+						FC::mulFeatures( features[ index ], this->m_weight );
+					}
+
 			});
 
 		//Concat features and images here...
@@ -785,6 +793,10 @@ ThreadResult OcclusionHandler::scoreCandidate(const std::array<cv::Mat, 2> & fra
 			{
 				features[ index ] = this->m_featureExtractor->getFeatures( frame[ index ], window );
 				FC::mulFeatures( features[ index ], this->m_cosineWindow );
+				if(this->m_weight_mul!=0)
+					{
+						FC::mulFeatures( features[ index ], this->m_weight );
+					}
 			});
 
 		//Concat features and images here...

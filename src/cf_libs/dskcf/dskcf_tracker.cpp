@@ -35,7 +35,7 @@ bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, Rect & boundin
 	return !this->m_occlusionHandler->isOccluded();
 }
 
-bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector)
+bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector,double & mul)
 
 {
 	int64 tStart = cv::getTickCount();
@@ -47,7 +47,7 @@ bool DskcfTracker::update(const std::array< cv::Mat, 2 > & frame, cv::Rect_<doub
     this->point_predicted =this->m_occlusionHandler->point_predicted;
 
 	position = centerPoint(boundingBox);
-
+	this->m_occlusionHandler->m_weight_mul = mul;
 	this->m_occlusionHandler->update(frame, position);
 
 	int64 tStop = cv::getTickCount();

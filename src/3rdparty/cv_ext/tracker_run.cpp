@@ -9,6 +9,8 @@
 #include "init_box_selector.hpp"
 #include "cf_tracker.hpp"
 #include "dskcf_tracker.hpp"
+#include<iomanip>
+
 
 using namespace cv;
 using namespace std;
@@ -50,7 +52,7 @@ TrackerRun::~TrackerRun()
 		char mul_str[256];
 		sprintf(mul_str, "%.2f", this->_mul);
 		string mul_result = mul_str;
-		std::string name = "floor1000_weight_" + mul_result + "_1_" + _cap._name + "_distance_err.txt";
+		std::string name = "weight_" + mul_result + "_1_" + _cap._name + "_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
 		for (int j = 0; j < this->_center_err.size(); j++)
@@ -64,7 +66,7 @@ TrackerRun::~TrackerRun()
 
 ///*******************************************************************************/
 		ofstream outfile_overlap;
-		std::string name_overlap = "floor1000_weight_" + mul_result + "_1_" + _cap._name + "_overlap.txt";
+		std::string name_overlap = "weight_" + mul_result + "_1_" + _cap._name + "_overlap.txt";
 		outfile_overlap.open(name_overlap.c_str(), ios::app);
 		outfile_overlap.setf(ios::fixed);
 		for (int j = 0; j < this->_OVERLAP.size(); j++)
@@ -143,10 +145,11 @@ bool TrackerRun::update()
 		int64 tStart = 0;
 		int64 tDuration = 0;
 
+		double delta_t = 0;
 		if (_frameIdx == 1)
 			{
 				_image[0] = _cap.Get_first_RGB();
-				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB();
+				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB(delta_t);
 				if (_image[0].empty() || _image[1].empty())
 					{
 						return false;
@@ -155,7 +158,7 @@ bool TrackerRun::update()
 		else
 			{
 				_image[0] = _cap.Get_Next_RGB();
-				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB();
+				_image[1] = _cap.Get_Depth_Image_same_time_to_RGB(delta_t);
 				if (_image[0].empty() || _image[1].empty())
 					{
 						return false;
@@ -202,7 +205,12 @@ bool TrackerRun::update()
 						singleFrameTiming[i] = i + 1;
 					}
 
-				_targetOnFrame = _tracker->update(resized, r, singleFrameTiming);
+				//double mul = 1;
+				//if (delta_t < 1)mul = this->_mul * (1 - delta_t);
+				//std::cout << std::setiosflags(ios::fixed)<<"delta_t from RGB and depth is " << std::setprecision(2)<<delta_t << "  mul == " << mul<<std::setprecision(0) << std::endl;
+
+
+				_targetOnFrame = _tracker->update(resized, r, singleFrameTiming, this->_mul);
 				_boundingBox.x = r.x * SCALE;
 				_boundingBox.y = r.y * SCALE;
 				_boundingBox.width = r.width * SCALE;
@@ -233,9 +241,9 @@ bool TrackerRun::update()
 		center.y = _boundingBox.y + _boundingBox.height / 2;
 		circle(hudImage, center, 3, colour, 2);
 
-		cv::Point_<double> prdicted = this->_tracker->get_predicted_point() * SCALE;
-		std::cout<<"for show prdicted  "<<prdicted.x<<" * "<<prdicted.y<<std::endl;
-		circle(hudImage, prdicted, 3, cv::Scalar(0,0,255), 2);
+		//cv::Point_<double> prdicted = this->_tracker->get_predicted_point() * SCALE;
+		//std::cout << "for show prdicted  " << prdicted.x << " * " << prdicted.y << std::endl;
+		//circle(hudImage, prdicted, 3, cv::Scalar(0, 0, 255), 2);
 
 		//
 		cv::Rect Current_GroundTruth = _cap.Get_Current_GroundTruth_Rect();
@@ -311,6 +319,7 @@ bool TrackerRun::update()
 		imshow(_windowTitle.c_str(), hudImage);
 
 		waitKey(0);
+		//if(_frameIdx>150)waitKey(0);
 		++_frameIdx;
 
 		std::cout << std::endl << std::endl;

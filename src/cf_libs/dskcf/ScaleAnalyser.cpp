@@ -80,7 +80,9 @@ Rect ScaleAnalyser::init(const cv::Mat &, const Rect & boundingBox)
 						cv::dft(gaussianShapedLabelsShifted2D(this->m_outputSigmas[i], sizeFloor(this->m_windowSizes[i] * (1.0 / static_cast<double>(this->m_cellSize)))), this->m_yfs[i],
 								cv::DFT_COMPLEX_OUTPUT);
 
-						this->m_cosineWindows[i] = hanningWindow<double>(this->m_yfs[i].rows) * hanningWindow<double>(this->m_yfs[i].cols).t();
+                     	this->m_cosineWindows[i] = hanningWindow<double>(this->m_yfs[i].rows) * hanningWindow<double>(this->m_yfs[i].cols).t();
+                         //std::cout<<this->m_cosineWindows[i]<<std::endl;
+                        //char k;std::cin>>k;
 
 						if (this->m_scales[i] == 1.0)
 							{

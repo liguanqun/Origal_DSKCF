@@ -58,7 +58,7 @@ DS-KCF: A ~real-time tracker for RGB-D data, Journal of Real-Time Image Processi
 class DepthSegmenter
 {
 public:
-	DepthSegmenter();
+	DepthSegmenter(double & mul);
 
 	/**
 	 * Initialise the depth segmenter.
@@ -122,6 +122,7 @@ public:
 	cv::Rect  _segmente_rect;
 
 	int _floor_rows;
+	double _mul;
 private:
 	/** The mean of the target object's depth */
 	double m_targetDepth;

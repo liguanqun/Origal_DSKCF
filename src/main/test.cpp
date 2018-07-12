@@ -41,7 +41,7 @@ void ECO_data(string path_ECO, string path_groundtruth);
 
 int main(int argc, const char** argv)
 	{
-
+	//	ECO_data(argv[1],argv[2]);
 		std::vector<string> name;
 		for (int i = 1; i < argc; i++)
 			{
@@ -94,13 +94,14 @@ void ECO_data(string path_ECO, string path_groundtruth)
 		ifstream myfile(path_groundtruth.c_str());
 		if (!myfile.is_open())
 			{
-				cout << "can not open the init file" << endl;
+				cout << "can not open the   file" << endl;
 			}
 
 		string temp;
 		int Rcet_ID = 1;
 		while (getline(myfile, temp))
 			{
+				std::cout<<temp<<std::endl;
 				cv::Rect r;
 				if (temp.substr(0, temp.find_first_of(',')).c_str() == "NaN")
 					{
@@ -125,22 +126,26 @@ void ECO_data(string path_ECO, string path_groundtruth)
 						temp.erase(0, temp.find_first_of(',') + 1);
 
 						int k = atoi(temp.c_str());
-						_FrameID_rect[k] = r;
+						if(k!=Rcet_ID)std::cout<<"read groundtruth rect error k="<<k<<"  Rect_ID == "<<Rcet_ID<<std::endl;
+						_FrameID_rect[Rcet_ID] = r;
 					}
 
 				Rcet_ID++;
+				temp.clear();
 			}
 /////////////////////////////////////////////////////////////////////////////////////
 		std::map<int, cv::Rect> _FrameID_rect_ECO;
 		ifstream myfile_eco(path_ECO.c_str());
 		if (!myfile_eco.is_open())
 			{
-				cout << "can not open the init file" << endl;
+				cout << "can not open the   file" << endl;
 			}
 
 		Rcet_ID = 1;
+		temp.clear();
 		while (getline(myfile_eco, temp))
 			{
+				std::cout<<temp<<std::endl;
 				cv::Rect r;
 				if (Rcet_ID > _FrameID_rect.size())
 					{
@@ -156,6 +161,7 @@ void ECO_data(string path_ECO, string path_groundtruth)
 					}
 				else
 					{
+
 						r.x = atoi(temp.substr(0, temp.find_first_of(',')).c_str());
 						temp.erase(0, temp.find_first_of(',') + 1);
 
@@ -169,17 +175,18 @@ void ECO_data(string path_ECO, string path_groundtruth)
 						temp.erase(0, temp.find_first_of(',') + 1);
 
 						int k = atoi(temp.c_str());
-						_FrameID_rect_ECO[k] = r;
+						if(k!=Rcet_ID)std::cout<<"read eco result rect error k="<<k<<"  Rect_ID == "<<Rcet_ID<<std::endl;
+						_FrameID_rect_ECO[Rcet_ID] = r;
 					}
-
+            temp.clear();
 				Rcet_ID++;
 			}
 //////////////////////////////////////////////////////////////////////////
 		ofstream outfile_distance_err;
-		std::string name = "eco_distance_err";
+		std::string name = "csr-dcf_distance_err.txt";
 		outfile_distance_err.open(name.c_str(), ios::app);
 		outfile_distance_err.setf(ios::fixed);
-		for (int j = 0; j < _FrameID_rect.size(); j++)
+		for (int j = 1; j < _FrameID_rect.size(); j++)
 			{
 				double err;
 				cv::Point_<double> center;
@@ -197,10 +204,10 @@ void ECO_data(string path_ECO, string path_groundtruth)
 		outfile_distance_err.close();
 /////////////////////////////////////////////////////////////////////////
 		ofstream overlap;
-		std::string name_overlap = "eco_overlap";
+		std::string name_overlap = "csr-dcf_overlap.txt";
 		overlap.open(name_overlap.c_str(), ios::app);
 		overlap.setf(ios::fixed);
-		for (int j = 0; j < _FrameID_rect.size(); j++)
+		for (int j = 1; j < _FrameID_rect.size(); j++)
 			{
 				double overlap_value;
 
@@ -211,7 +218,7 @@ void ECO_data(string path_ECO, string path_groundtruth)
 				float area2 = _FrameID_rect[j].width * _FrameID_rect[j].height;
 				overlap_value = intersection / (area1 + area2 - intersection);
 
-				overlap << std::setprecision(1) << overlap_value << ",";
+				overlap << std::setprecision(5) << overlap_value << ",";
 			}
 		overlap << "\n";
 		overlap.close();
@@ -225,7 +232,7 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 		ifstream myfile(path.c_str());
 		if (!myfile.is_open())
 			{
-				cout << "can not open the init file from the path:" << path << endl;
+				cout << "can not open the   file from the path:" << path << endl;
 
 			}
 
@@ -242,8 +249,8 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 				distance_err_tmp = atof(tmp.substr(0, tmp.find_first_of(",")).c_str());
 				//	std::cout << distance_err_tmp << "   ";
 				data_save.push_back(distance_err_tmp);
-				//if (data_save.size() > 150)
-		//	break;
+				if (data_save.size() > 162)
+			break;
 				tmp.erase(0, tmp.find_first_of(",") + 1);
 			}
 		//	std::cout << std::endl;
@@ -469,7 +476,7 @@ bool overlap_success_rate(std::vector<std::vector<double>> data, std::string win
 			}
 		std::cout << std::endl;
 
-		std::cout << "distance success： ";
+		std::cout << "overlap success： ";
 		for (int i = 0; i < result.size(); i++)
 			{
 				std::cout << result[i][49] << "  ";

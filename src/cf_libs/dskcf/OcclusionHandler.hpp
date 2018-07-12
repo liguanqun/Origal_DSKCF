@@ -88,6 +88,9 @@ public:
   std::vector<int64> singleFrameProTime;
   cv::Point_<double> point_predicted;
 
+  cv::Mat m_weight;
+  double m_weight_mul;
+
 private:
   bool m_isOccluded;
   std::shared_ptr< FeatureChannelProcessor > m_featureProcessor;
@@ -105,8 +108,7 @@ private:
   cv::Mat m_cosineWindow;
   cv::Mat m_occluderCosineWindow;
 
-  cv::Mat m_weight;
-  double m_weight_mul;
+
 
 
   double m_lambdaOcc;

@@ -28,7 +28,7 @@ class ImageAcquisition
 		cv::Mat Get_first_RGB();
 		cv::Mat Get_Next_RGB();
 
-		cv::Mat Get_Depth_Image_same_time_to_RGB();
+		cv::Mat Get_Depth_Image_same_time_to_RGB(double & delta_t);
 
         cv::Rect Get_Init_Rect(void);
 

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <stdio.h>
 #include "json/json.h"
+#include<iomanip>
 ImageAcquisition::ImageAcquisition()
 	{
 //遮挡物特别大，遮挡之后的恢复问题
@@ -100,7 +101,6 @@ void ImageAcquisition::Init()
 
 		_size = std::min(_FrameID_path_depth.size(), _FrameID_path.size());
 
-
 		/**********读frames.json******************/
 		std::string path_JSON = _path + "/frames.json";
 
@@ -150,9 +150,8 @@ void ImageAcquisition::Init()
 			{
 				Rcet_ID_num++;
 			}
-		_size =std::min(Rcet_ID_num,_size);
+		_size = std::min(Rcet_ID_num, _size);
 		file.close();
-
 
 		ifstream myfile(path.c_str());
 		if (!myfile.is_open())
@@ -232,9 +231,15 @@ cv::Rect ImageAcquisition::Get_Current_GroundTruth_Rect(void)
 		return r;
 	}
 
-cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB()
+cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB(double & delta_t)
 	{
+		using namespace std;
 		int ask = _RGB_DEPTH_ID[_rgb_FrameID - 1];
+		double delta = std::abs(_FrameID_t_depth[ask] - _FrameID_t[_rgb_FrameID - 1]);
+		delta_t = delta/33333;
+		std::cout << std::setiosflags(ios::fixed);
+		std::cout << "delta_t per frame " << std::setprecision(10) << delta_t <<std::setprecision(0) <<std::endl;
+
 		cv::Mat depth;
 		if (ask <= _size)
 			{

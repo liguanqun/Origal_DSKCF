@@ -685,8 +685,8 @@ cv::Mat_<uchar> createMask_filter(const cv::Mat_<T> & region, int & floor_rows)
 			{
 				for (int x = 0; x < region.cols; x++)
 					{
-						//小于10cm的数据被认为是噪点，
-						if (region(y, x) < 100)
+						//小于50cm的数据被认为是噪点，
+						if (region(y, x) < 500 ||region(y, x) > 8000 )
 							{
 								mask(y, x) = 0;
 							}

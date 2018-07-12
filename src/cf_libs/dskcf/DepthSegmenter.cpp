@@ -3,16 +3,19 @@
 #include "DepthSegmenter.hpp"
 #include "math_helper.hpp"
 #include "tbb/tick_count.h"
+#include <fstream>
+
 
 typedef cv::Size_<double> Size;
 typedef cv::Rect_<double> Rect;
 typedef cv::Point_<double> Point;
 
-DepthSegmenter::DepthSegmenter()
+DepthSegmenter::DepthSegmenter(double & mul)
 	{
 		this->m_targetDepth = 0.0;
 		this->m_targetSTD = 0.0;
 		this->minSTD = 20;
+		this->_mul = mul;
 	}
 
 cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
@@ -27,14 +30,30 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 				cv::Scalar mean, stddev;
 
 				//Find and store the empty depth values to be excluded from the histogram
-				//cv::Mat1b mask = createMask(front_depth);
-				//std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
-				this->_floor_rows=0;
-				cv::Mat1b mask = createMask_filter(front_depth,this->_floor_rows);
-                std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
+				cv::Mat1b mask;
 
+				if (this->_mul == 0)
+					{
+						mask = createMask(front_depth);
+					}
+				else
+					{
+						//std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
+						this->_floor_rows = 0;
+						mask = createMask_filter(front_depth, this->_floor_rows);
+						//std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
+					}
 				//Create the histogram of depths in the region excluding the masked
 				this->m_histogram = DepthHistogram::createHistogram(50, front_depth, mask);
+
+
+				for (uchar i = 0; i < this->m_histogram.size(); i++)
+					{
+						//std::vector<double> tmp;
+						//tmp.push_back(double(this->m_histogram[i]));
+						std::cout<<this->m_histogram[i]<<" ";
+					}
+				std::cout<<std::endl;
 
 				//Find the peaks in the histogram
 				std::vector<int> peaks = this->m_histogram.getPeaks(5, 0.02);
@@ -94,12 +113,19 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 				cv::Scalar mean, stddev;
 
 				//Find and store the empty depth values to be excluded from the histogram
-				//cv::Mat1b mask = createMask(front_depth);
-			//	std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
-				this->_floor_rows=0;
-				cv::Mat1b mask = createMask_filter(front_depth,this->_floor_rows);
-                std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
+				cv::Mat1b mask;
 
+				if (this->_mul == 0)
+					{
+						mask = createMask(front_depth);
+					}
+				else
+					{
+						//std::cout<<"front depth :"<<std::endl<<front_depth<<std::endl;
+						this->_floor_rows = 0;
+						mask = createMask_filter(front_depth, this->_floor_rows);
+						//std::cout<<"sum floor rows is "<<this->_floor_rows<<std::endl;
+					}
 				//Create the histogram of depths in the region excluding the mask
 				this->m_histogram = DepthHistogram::createHistogram(cvFloor(modelNoise(this->m_targetDepth, this->m_targetSTD)), front_depth, mask);
 
@@ -130,7 +156,7 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 						result = objectMask.clone();
 						result = result * 255;
 
-						this->_segmente_rect  = this->rectRegions[indexCloseCenter];
+						this->_segmente_rect = this->rectRegions[indexCloseCenter];
 						//std::cout << "ttt x y width height == " << ttt.x << "  " << ttt.y << "  " << ttt.width << " " << ttt.height << std::endl;
 						cv::rectangle(result, this->_segmente_rect, cv::Scalar(255), 1);
 						cv::namedWindow("result", 0);
@@ -188,8 +214,8 @@ const cv::Mat1b DepthSegmenter::createLabelImage(const cv::Mat1w & region, const
 				for (int y = 0; y < region.rows; y++)
 					{
 						double depth = static_cast<double>(region(y, x));
-                        //添加mask的判断，被mask去掉的不再参加聚类
-						if (depth != 0.0 && mask(y,x)!=0)
+						//添加mask的判断，被mask去掉的不再参加聚类
+						if (depth != 0.0 && mask(y, x) != 0)
 							{
 
 								int index = this->m_histogram.depthToBin(depth);
@@ -363,7 +389,7 @@ const std::vector<cv::Point_<double> > DepthSegmenter::createLabelImageCCOcclude
 		tmpMask.copyTo(objectMask);
 		tmpMask.release();
 
-		for (int j = 0; j <(int) tmpVector.size(); j++)
+		for (int j = 0; j < (int) tmpVector.size(); j++)
 			{
 				if (tmpVector[j].x != -1)
 					{
@@ -457,7 +483,7 @@ const std::vector<cv::Point_<double> > DepthSegmenter::createLabelImageCCOcclude
 		tmpMask.copyTo(objectMask);
 		tmpMask.release();
 
-		for (int j = 0; j < (int)tmpVector.size(); j++)
+		for (int j = 0; j < (int) tmpVector.size(); j++)
 			{
 				if (tmpVector[j].x != -1)
 					{
@@ -717,7 +743,7 @@ void DepthSegmenter::debugSaveHistogram(std::string filename)
 	{
 		FILE *pfile = fopen(filename.c_str(), "w");
 
-		for (int i = 0; i < (int)this->m_histogram.size(); i++)
+		for (int i = 0; i < (int) this->m_histogram.size(); i++)
 			fprintf(pfile, "%f %f\n", this->m_histogram.binToDepth(i), this->m_histogram[i]);
 
 		fclose(pfile);

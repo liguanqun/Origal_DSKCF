@@ -28,7 +28,7 @@ class DskcfTracker: public CfTracker
 		DskcfTracker(double mul);
 		virtual ~DskcfTracker();
 		virtual bool update(const std::array<cv::Mat, 2> & frame, cv::Rect_<double> & boundingBox);
-		virtual bool update(const std::array<cv::Mat, 2> & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector);
+		virtual bool update(const std::array<cv::Mat, 2> & frame, cv::Rect_<double>& boundingBox, std::vector<int64> &timePerformanceVector,double & mul);
 		virtual bool reinit(const std::array<cv::Mat, 2> & frame, cv::Rect_<double> & boundingBox);
 
 		virtual TrackerDebug* getTrackerDebug();
