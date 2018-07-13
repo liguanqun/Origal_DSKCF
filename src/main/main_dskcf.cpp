@@ -3,7 +3,7 @@
 int main(int argc, const char** argv)
 	{
 
-				for (double a = 0.1; a <1; a += 0.1)
+		/*				for (double a = 0.1; a <1; a += 0.1)
 		 {
 		 DskcfTrackerRun main;
 		 char mul_str[256];
@@ -11,9 +11,9 @@ int main(int argc, const char** argv)
 		 argv[2] = mul_str;
 		 main.start(argc, argv);
 
-		 }
+		 }*/
 
-/*		DskcfTrackerRun main;
+		DskcfTrackerRun main;
 
 		if (main.start(argc, argv))
 			{
@@ -22,5 +22,5 @@ int main(int argc, const char** argv)
 		else
 			{
 				return -1;
-			}*/
+			}
 	}

@@ -38,6 +38,10 @@ ImageAcquisition::ImageAcquisition()
 void ImageAcquisition::Init()
 	{
 		using namespace std;
+		string tmp_name =_path;
+		tmp_name.erase(0,tmp_name.find_last_of("/")+1);
+		_name =tmp_name;
+
 		/*******************读RGB图*************************/
 		int t, k;
 		DIR *dp;

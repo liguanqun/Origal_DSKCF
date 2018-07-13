@@ -243,8 +243,8 @@ const cv::Mat1b DepthSegmenter::createLabelImage(const cv::Mat1w & region, const
 				for (int y = 0; y < region.rows; y++)
 					{
 						double depth = static_cast<double>(region(y, x));
-
-						if (depth != 0.0)
+						//添加mask的判断，被mask去掉的不再参加聚类
+						if (depth != 0.0 && mask(y, x) != 0)
 							{
 
 								int index = histogram.depthToBin(depth);

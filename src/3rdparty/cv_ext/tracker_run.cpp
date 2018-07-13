@@ -221,6 +221,23 @@ bool TrackerRun::update()
 			}
 
 		imshow(_windowTitle.c_str(), hudImage);
+		//保存结果
+		ofstream outfile_result_rect;
+		char mul_str[256];
+		sprintf(mul_str, "%.2f", this->_mul);
+		string mul_result = mul_str;
+		std::string name = "weight_" + mul_result + "_" + _cap._name + "_result.txt";
+		outfile_result_rect.open(name.c_str(), ios::app);
+		if (_targetOnFrame)
+			{
+				outfile_result_rect << _boundingBox.x << ","<<_boundingBox.y<<","<<_boundingBox.width<<","<<_boundingBox.height<<","<<_frameIdx<<std::endl;
+			}
+		else
+			{
+				outfile_result_rect <<"NaN,NaN,NaN,NaN,"<<_frameIdx<<std::endl;
+			}
+		outfile_result_rect << "\n";
+		outfile_result_rect.close();
 
 		waitKey(0);
 		//if(_frameIdx>150)waitKey(0);
