@@ -126,8 +126,19 @@ void ImageAcquisition::Init()
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
 						int ach = root["depthFrameID"][i].asInt();
-						_RGB_DEPTH_ID[i + 1] = ach;
+						std::cout<<ach<<std::endl;
+						_DEPTH_benchmark_ID[i + 1] = ach;
 					}
+				for (unsigned int i = 0; i < root["imageFrameID"].size(); i++)
+					{
+						int ach = root["imageFrameID"][i].asInt();
+						std::cout<<ach<<std::endl;
+						_RGB_benchmark_ID[i + 1] = ach;
+					}
+				(_size<root["imageFrameID"].size())?_size:root["imageFrameID"].size();
+				(_size<root["depthFrameID"].size())?_size:root["depthFrameID"].size();
+
+
 			}
 		else
 			{
@@ -139,7 +150,9 @@ void ImageAcquisition::Init()
 	}
 cv::Mat ImageAcquisition::Get_first_RGB()
 	{
-		cv::Mat image = cv::imread(_FrameID_path[_rgb_FrameID]);
+		cv::Mat image ;
+		if(_RGB_benchmark_ID.empty())image = cv::imread(_FrameID_path[_rgb_FrameID]);
+		else image = cv::imread(_FrameID_path[_RGB_benchmark_ID[_rgb_FrameID]]);
 		_rgb_FrameID++;
 		return image;
 
@@ -149,7 +162,8 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 		cv::Mat image;
 		if (_rgb_FrameID <= _size)
 			{
-				image = cv::imread(_FrameID_path[_rgb_FrameID]);
+				if(_RGB_benchmark_ID.empty())image = cv::imread(_FrameID_path[_rgb_FrameID]);
+				else image = cv::imread(_FrameID_path[_RGB_benchmark_ID[_rgb_FrameID]]);
 				_rgb_FrameID++;
 
 			}
@@ -165,11 +179,13 @@ cv::Mat ImageAcquisition::Get_Next_RGB()
 cv::Mat ImageAcquisition::Get_Depth_Image_same_time_to_RGB(double & delta_t)
 	{
 		using namespace std;
-		int ask = _RGB_DEPTH_ID[_rgb_FrameID - 1];
-		double delta = std::abs(_FrameID_t_depth[ask] - _FrameID_t[_rgb_FrameID - 1]);
-		delta_t = delta/33333;
-		std::cout << std::setiosflags(ios::fixed);
-		std::cout << "delta_t per frame " << std::setprecision(10) << delta_t <<std::setprecision(0) <<std::endl;
+		int ask;
+		if(_DEPTH_benchmark_ID.empty()) ask =_rgb_FrameID - 1;
+		else  ask = _DEPTH_benchmark_ID[_rgb_FrameID - 1];
+		//double delta = std::abs(_FrameID_t_depth[ask] - _FrameID_t[_rgb_FrameID - 1]);
+		//delta_t = delta/33333;
+		//std::cout << std::setiosflags(ios::fixed);
+		//std::cout << "delta_t per frame " << std::setprecision(10) << delta_t <<std::setprecision(0) <<std::endl;
 
 		cv::Mat depth;
 		if (ask <= _size)

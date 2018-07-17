@@ -46,7 +46,7 @@ class ImageAcquisition
 		std::map<int, std::string> _FrameID_path, _FrameID_path_depth;
 
 		std::map<int, int> _FrameID_t, _FrameID_t_depth;
-		std::map<int, int> _RGB_DEPTH_ID;
+		std::map<int, int> _RGB_benchmark_ID,_DEPTH_benchmark_ID;
 		int  _rgb_FrameID;
 
 	};

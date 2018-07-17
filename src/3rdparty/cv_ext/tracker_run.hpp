@@ -28,8 +28,8 @@ class TrackerRun
 public:
     TrackerRun(std::string windowTitle);
     virtual ~TrackerRun();
-    bool start(int argc, const char** argv);
-
+   // bool start(int argc, const char** argv);
+    bool start(int argc, std::string path,double mul);
 
 private:
 

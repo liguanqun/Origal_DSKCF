@@ -78,7 +78,7 @@ void OcclusionHandler::init(const std::array<cv::Mat, 2> & frame, const Rect & t
 							}
 					}
 				cv::namedWindow("weight_for_show", 0);
-				cv::imshow("weight_for_show", weight_for_show);
+				//cv::imshow("weight_for_show", weight_for_show);
 				//
 				int cell_width = this->m_cosineWindow.cols;
 				int cell_height = this->m_cosineWindow.rows;
@@ -316,7 +316,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 					}
 
 				cv::namedWindow("weight_for_show", 0);
-				cv::imshow("weight_for_show", weight_for_show);
+				//cv::imshow("weight_for_show", weight_for_show);
 
 				for (int cell_y = 0; cell_y < cell_height; cell_y++)
 					{
@@ -352,7 +352,7 @@ void OcclusionHandler::visibleUpdate(const std::array<cv::Mat, 2> & frame, const
 					});
 				cv::Mat weight_cosine = this->m_weight.mul(this->m_cosineWindow);
 				cv::namedWindow("weight_cosine", 0);
-				cv::imshow("weight_cosine", weight_cosine);
+			//	cv::imshow("weight_cosine", weight_cosine);
 
 			}
 		else
@@ -396,6 +396,7 @@ const Rect OcclusionHandler::occludedDetect(const std::array<cv::Mat, 2> & frame
 		Rect newSearchWindow = extremeRect(boundingBoxFromPointSize(prediction, this->m_targetSize), extremeRect(oldSearchWindow, target));
 
 		//move here the response of the tracker....then test the
+
 		Rect result = boundingBoxFromPointSize(this->m_occluderTracker->detect(frame[0], features, position).position, this->m_occluderSize);
 		int64 tStopTrackOccluder = cv::getTickCount();
 		this->singleFrameProTime[3] = tStopTrackOccluder - tStartTrackOccluder;
@@ -406,6 +407,14 @@ const Rect OcclusionHandler::occludedDetect(const std::array<cv::Mat, 2> & frame
 		this->m_searchWindow = extremeRect(newSearchWindow, result) & imageRect;
 		this->m_searchWindow = resizeBoundingBox(this->m_searchWindow, this->m_searchWindow.size()) & imageRect;
 		Rect areaToSegment = resizeBoundingBox(this->m_searchWindow, this->m_searchWindow.size() * 1.05) & imageRect;
+
+
+/*		cv::Mat occ_for_show = frame[0].clone();
+       cv::namedWindow("occ_full",0);
+       cv::rectangle(occ_for_show,result,cv::Scalar(0, 255, 0),2);
+       cv::rectangle(occ_for_show,areaToSegment,cv::Scalar(255, 0, 0),2);
+       cv::imshow("occ_full",occ_for_show);
+       cv::waitKey(0);*/
 
 		//substitute the next three lines with a better segmentation
 		cv::Mat1w area(frame[1], areaToSegment);
@@ -420,7 +429,7 @@ const Rect OcclusionHandler::occludedDetect(const std::array<cv::Mat, 2> & frame
 		cv::Rect_<double> objMaskRect;
 
 		std::vector<float> centersCandidate;
-
+        //在矩形框  areaToSegment 里分割深度图
 		std::vector<cv::Point_<double> > candidates = this->m_depthSegmenter->segmentOccluder(area, Rect(0, 0, area.cols, area.rows), minimumArea, tmpObjectMask, centersCandidate, objMaskRect);
 
 		//re-update here the window search with the segmented occluder....
@@ -497,23 +506,45 @@ const Rect OcclusionHandler::onOcclusion(const std::array<cv::Mat, 2> & frame, s
 		//cv::meanStdDev( cv::Mat( frame[ 1 ], boundingBoxModified & imageRect ), mean, stddev );
 		cv::meanStdDev(cv::Mat(frame[1], boundingBoxModified & imageRect), mean, stddev, occluder);
 		stddev.val[0] = modelNoise(mean.val[0], stddev.val[0]);
-
+       //在整副图中获取深度在［］区间内的区域
 		occluder = getRegion<ushort>(cv::Mat(frame[1], imageRect), cvFloor(mean.val[0] - stddev.val[0]), cvCeil(mean.val[0] + stddev.val[0]));
 
 		//now filter out small regions and keep the one with maximum overlap....
 		auto occlusionCandidates = connectedComponents<uchar>(occluder);
 
 		//Find the bounding box that has the largest overlapping region with the target, excluding the background.
+		//找到跟目标框重合区域最大的 矩形框
 		cv::Rect_<int> occluderBBCandidate = *(std::max_element(occlusionCandidates.begin() + 1, occlusionCandidates.end(),
 				[ boundingBoxModified ]( const cv::Rect_< int > & a, const cv::Rect_< int > & b ) -> bool
 					{
 						cv::Rect_< int > bb = rectRound( boundingBoxModified );
 						return ( a & bb ).area() < ( b & bb ).area();
 					}));
+//截取 举行框跟 原目标搜索框 的重合区域
+/*		cv::Mat occ_for_show = frame[0].clone();
+       cv::namedWindow("occ_full",0);
+       cv::rectangle(occ_for_show,occluderBBCandidate,cv::Scalar(0, 0, 255),2);
+       cv::imshow("occ_full",occ_for_show);
+       cv::waitKey(0);*/
 
 		cv::Rect_<int> occluderBB = rectRound(window) & occluderBBCandidate;
+        //cv::Rect_<int> occluderBB = occluderBBCandidate;
 
+/*		 cv::rectangle(occ_for_show,occluderBB,cv::Scalar(0, 0, 0),2);
+	       cv::imshow("occ_full",occ_for_show);
+	       cv::waitKey(0);*/
+
+
+
+		//提取最大的矩形
 		this->m_searchWindow = extremeRect<double>(rectCast<double>(occluderBB), boundingBox);
+
+/*
+		cv::rectangle(occ_for_show,this->m_searchWindow,cv::Scalar(0, 255, 0),2);
+		cv::imshow("occ_full",occ_for_show);
+	    cv::waitKey(0);
+*/
+
 
 		if (occluderBB.area() > 0)
 			//Initialise the occluder tracker with the new bounding box

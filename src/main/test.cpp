@@ -28,7 +28,6 @@ void plot_cruve(std::vector<double> data, std::vector<double> data1, std::string
 void plot_distance_err_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a);
 void plot_overlap_cruve(std::vector<double> data, std::vector<double> data1, std::string windoe_title, cv::Scalar scalar, cv::Scalar scalar_a);
 
-
 //可以同时在一张图里画任意多条曲线
 bool distance_success_rate(std::vector<std::vector<double>> data, std::string windoe_title);
 bool overlap_success_rate(std::vector<std::vector<double>> data, std::string windoe_title);
@@ -38,34 +37,35 @@ bool plot_overlap_cruve(std::vector<std::vector<double>> data, std::string windo
 //读取ECO的估计矩形数据，生成距离差文件和重合度文件
 void ECO_data(string path_ECO, string path_groundtruth);
 
-
 int main(int argc, const char** argv)
 	{
-	//	ECO_data(argv[1],argv[2]);
-		std::vector<string> name;
-		for (int i = 1; i < argc; i++)
-			{
-				name.push_back(argv[i]);
-			}
 
-		std::vector<std::vector<double>> distance_err, overlap;
-		for (int i = 0; i < argc - 1; i++)
-			{
-				std::vector<double> data;
-				std::string path = name[i] + "_distance_err.txt";
-				read_data(path, data, 1);
-				distance_err.push_back(data);
-				data.clear();
 
-				path = name[i] + "_overlap.txt";
-				read_data(path, data, 5);
-				overlap.push_back(data);
-				data.clear();
-			}
-		cv::namedWindow("distance_success_rate", 0);
-		cv::namedWindow("overlap_success_rate", 0);
-		distance_success_rate(distance_err, "distance_success_rate");
-		overlap_success_rate(overlap, "overlap_success_rate");
+		//	ECO_data(argv[1],argv[2]);
+				std::vector<string> name;
+		 for (int i = 1; i < argc; i++)
+		 {
+		 name.push_back(argv[i]);
+		 }
+
+		 std::vector<std::vector<double>> distance_err, overlap;
+		 for (int i = 0; i < argc - 1; i++)
+		 {
+		 std::vector<double> data;
+		 std::string path = name[i] + "_distance_err.txt";
+		 read_data(path, data, 1);
+		 distance_err.push_back(data);
+		 data.clear();
+
+		 path = name[i] + "_overlap.txt";
+		 read_data(path, data, 5);
+		 overlap.push_back(data);
+		 data.clear();
+		 }
+		 cv::namedWindow("distance_success_rate", 0);
+		 cv::namedWindow("overlap_success_rate", 0);
+		 distance_success_rate(distance_err, "distance_success_rate");
+		 overlap_success_rate(overlap, "overlap_success_rate");
 
 		 cv::namedWindow("distance_err", 0);
 		 cv::namedWindow("overlap", 0);
@@ -101,7 +101,7 @@ void ECO_data(string path_ECO, string path_groundtruth)
 		int Rcet_ID = 1;
 		while (getline(myfile, temp))
 			{
-				std::cout<<temp<<std::endl;
+				std::cout << temp << std::endl;
 				cv::Rect r;
 				if (temp.substr(0, temp.find_first_of(',')).c_str() == "NaN")
 					{
@@ -126,7 +126,8 @@ void ECO_data(string path_ECO, string path_groundtruth)
 						temp.erase(0, temp.find_first_of(',') + 1);
 
 						int k = atoi(temp.c_str());
-						if(k!=Rcet_ID)std::cout<<"read groundtruth rect error k="<<k<<"  Rect_ID == "<<Rcet_ID<<std::endl;
+						if (k != Rcet_ID)
+							std::cout << "read groundtruth rect error k=" << k << "  Rect_ID == " << Rcet_ID << std::endl;
 						_FrameID_rect[Rcet_ID] = r;
 					}
 
@@ -145,7 +146,7 @@ void ECO_data(string path_ECO, string path_groundtruth)
 		temp.clear();
 		while (getline(myfile_eco, temp))
 			{
-				std::cout<<temp<<std::endl;
+				std::cout << temp << std::endl;
 				cv::Rect r;
 				if (Rcet_ID > _FrameID_rect.size())
 					{
@@ -175,10 +176,11 @@ void ECO_data(string path_ECO, string path_groundtruth)
 						temp.erase(0, temp.find_first_of(',') + 1);
 
 						int k = atoi(temp.c_str());
-						if(k!=Rcet_ID)std::cout<<"read eco result rect error k="<<k<<"  Rect_ID == "<<Rcet_ID<<std::endl;
+						if (k != Rcet_ID)
+							std::cout << "read eco result rect error k=" << k << "  Rect_ID == " << Rcet_ID << std::endl;
 						_FrameID_rect_ECO[Rcet_ID] = r;
 					}
-            temp.clear();
+				temp.clear();
 				Rcet_ID++;
 			}
 //////////////////////////////////////////////////////////////////////////
@@ -250,7 +252,7 @@ void read_data(std::string path, std::vector<double>& data_save, int fixed_preci
 				//	std::cout << distance_err_tmp << "   ";
 				data_save.push_back(distance_err_tmp);
 				if (data_save.size() > 162)
-			break;
+					break;
 				tmp.erase(0, tmp.find_first_of(",") + 1);
 			}
 		//	std::cout << std::endl;

@@ -51,12 +51,15 @@ TrackerRun::~TrackerRun()
 		std::cout << "mean," << std::accumulate(this->frameTime.begin(), this->frameTime.end(), 0.0) / static_cast<double>(this->frameTime.size()) << std::endl;
 	}
 
-bool TrackerRun::start(int argc, const char** argv)
-	{
+//bool TrackerRun::start(int argc, const char** argv)
+bool TrackerRun::start(int argc, std::string path,double mul)
+{
 		if (argc == 3)
 			{
-				this->_cap._path = argv[1];
-				this->_mul = std::atof(argv[2]);
+				this->_cap._path =path;
+				this->_mul = mul;//
+				//this->_cap._path =argv[1];
+				//this->_mul = std::atof(argv[2]);//
 			}
 		else
 			{
@@ -226,20 +229,21 @@ bool TrackerRun::update()
 		char mul_str[256];
 		sprintf(mul_str, "%.2f", this->_mul);
 		string mul_result = mul_str;
-		std::string name = "weight_" + mul_result + "_" + _cap._name + "_result.txt";
+		//std::string name = "weight_" + mul_result + "_" + _cap._name + "_result.txt";
+		std::string name = _cap._name + ".txt";
 		outfile_result_rect.open(name.c_str(), ios::app);
 		if (_targetOnFrame)
 			{
-				outfile_result_rect << _boundingBox.x << ","<<_boundingBox.y<<","<<_boundingBox.width<<","<<_boundingBox.height<<","<<_frameIdx<<std::endl;
+				outfile_result_rect << _boundingBox.x << ","<<_boundingBox.y<<","<<_boundingBox.width<<","<<_boundingBox.height<<","<<'0';
 			}
 		else
 			{
-				outfile_result_rect <<"NaN,NaN,NaN,NaN,"<<_frameIdx<<std::endl;
+				outfile_result_rect <<"NaN,NaN,NaN,NaN,"<<'1';
 			}
 		outfile_result_rect << "\n";
 		outfile_result_rect.close();
 
-		waitKey(0);
+		waitKey(1);
 		//if(_frameIdx>150)waitKey(0);
 		++_frameIdx;
 
