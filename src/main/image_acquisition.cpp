@@ -126,13 +126,13 @@ void ImageAcquisition::Init()
 				for (unsigned int i = 0; i < root["depthFrameID"].size(); i++)
 					{
 						int ach = root["depthFrameID"][i].asInt();
-						std::cout<<ach<<std::endl;
+						//std::cout<<ach<<std::endl;
 						_DEPTH_benchmark_ID[i + 1] = ach;
 					}
 				for (unsigned int i = 0; i < root["imageFrameID"].size(); i++)
 					{
 						int ach = root["imageFrameID"][i].asInt();
-						std::cout<<ach<<std::endl;
+						//std::cout<<ach<<std::endl;
 						_RGB_benchmark_ID[i + 1] = ach;
 					}
 				(_size<root["imageFrameID"].size())?_size:root["imageFrameID"].size();

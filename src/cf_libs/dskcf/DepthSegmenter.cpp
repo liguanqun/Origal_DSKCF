@@ -51,9 +51,9 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 					{
 						//std::vector<double> tmp;
 						//tmp.push_back(double(this->m_histogram[i]));
-						std::cout<<this->m_histogram[i]<<" ";
+						//std::cout<<this->m_histogram[i]<<" ";
 					}
-				std::cout<<std::endl;
+				//std::cout<<std::endl;
 
 				//Find the peaks in the histogram
 				std::vector<int> peaks = this->m_histogram.getPeaks(5, 0.02);
@@ -70,7 +70,7 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 
 				this->_ObjectMask = objectMask;
 
-				cv::Mat result;
+/*				cv::Mat result;
 				result = objectMask.clone();
 				result = result * 255;
 
@@ -80,7 +80,7 @@ cv::Mat1i DepthSegmenter::init(const cv::Mat & image, const Rect & boundingBox)
 				cv::namedWindow("result", 0);
 				cv::imshow("result", result);
 
-				this->_result = result;
+				this->_result = result;*/
 				cv::meanStdDev(front_depth, mean, stddev, objectMask);
 
 				this->m_targetDepth = mean.val[0];
@@ -151,7 +151,7 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 						cv::Mat1b objectMask = createMask<uchar>(this->m_labeledImage, this->labelsResults.labelsC[indexCloseCenter], false);
 						objectMask.mul(mask);
 
-						this->_ObjectMask = objectMask;
+/*						this->_ObjectMask = objectMask;
 						cv::Mat result;
 						result = objectMask.clone();
 						result = result * 255;
@@ -162,7 +162,7 @@ int DepthSegmenter::update(const cv::Mat & image, const Rect & boundingBox)
 						cv::namedWindow("result", 0);
 						cv::imshow("result", result);
 
-						this->_result = result;
+						this->_result = result;*/
 						cv::meanStdDev(front_depth, mean, stddev, objectMask);
 
 						int indexCenter = this->handleOcclusion(front_depth, this->labelsResults.centers, this->labelsResults.labelsC, this->m_targetDepth, this->m_targetSTD, mean.val[0],

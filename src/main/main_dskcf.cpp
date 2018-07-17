@@ -45,39 +45,34 @@ int main(int argc, const char** argv)
 
 			}
 
-		int i = 1;
 		for (std::vector<std::string>::iterator a = seq_name.begin(); a != seq_name.end(); a++)
 			{
-				i++;
-				if (i > 50)
+				DskcfTrackerRun main;
+
+				//argv[1] = *a;
+				std::cout << "current sequence is " << *a << std::endl;
+				double mul = std::atof(argv[2]);
+				if (main.start(argc, *a, mul))
 					{
-						DskcfTrackerRun main;
+						return 0;
 
-						//argv[1] = *a;
-						std::cout << "current sequence is " << *a << std::endl;
-						double mul = std::atof(argv[2]);
-						if (main.start(argc, *a, mul))
-							{
-								return 0;
-
-							}
-						else
-							{
-								//continue;
-								//return -1;
-							}
 					}
-
+				else
+					{
+						//continue;
+						//return -1;
+					}
 			}
-
-		/*		DskcfTrackerRun main;
-
-		 if (main.start(argc, argv))
-		 {
-		 return 0;
-		 }
-		 else
-		 {
-		 return -1;
-		 }*/
 	}
+
+/*		DskcfTrackerRun main;
+
+ if (main.start(argc, argv))
+ {
+ return 0;
+ }
+ else
+ {
+ return -1;
+ }
+ }*/
